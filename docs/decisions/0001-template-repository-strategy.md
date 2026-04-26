@@ -1,4 +1,4 @@
-# ADR-0003: 新規 PJ の立ち上げを GitHub Template repository で標準化する
+# ADR-0001: 新規 PJ の立ち上げを GitHub Template repository で標準化する
 
 ## Status
 

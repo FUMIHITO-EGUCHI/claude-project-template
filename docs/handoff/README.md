@@ -6,7 +6,6 @@
 - Human view: GitHub Projects v2 ボード（プロジェクトごとに 1 枚作成）
 - AI interface: `gh` CLI
 - ラベル定義: `.github/labels.yml`（`sync-labels.yml` workflow が main 更新時に同期）
-- 設計判断: `docs/decisions/0001-task-management-on-github-issues.md`
 
 ---
 

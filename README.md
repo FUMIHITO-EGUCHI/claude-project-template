@@ -62,5 +62,4 @@ grep -rn '@stack:replace' .
 
 ## 設計判断
 
-- ADR-0001: GitHub Issues + Projects v2 ベースの handoff（`docs/decisions/`）
-- ADR-0002: Template repository 戦略（`docs/decisions/`）
+- ADR-0001: Template repository 戦略（`docs/decisions/`）
