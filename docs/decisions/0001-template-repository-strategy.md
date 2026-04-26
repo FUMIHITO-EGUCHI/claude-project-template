@@ -28,11 +28,11 @@ Accepted
 
 ## Decision
 
-新規リポジトリ `kurahuta/claude-project-template` を作成し、GitHub の **Template repository** 機能で配布する。展開後は `scripts/init-project.sh` でプレースホルダ置換と hook 設置・ラベル同期を行う。
+新規リポジトリ `FUMIHITO-EGUCHI/claude-project-template` を作成し、GitHub の **Template repository** 機能で配布する。展開後は `scripts/init-project.sh` でプレースホルダ置換と hook 設置・ラベル同期を行う。
 
 具体構成:
 
-- **配布**: `gh repo create my-new --template kurahuta/claude-project-template --private --clone`
+- **配布**: `gh repo create my-new --template FUMIHITO-EGUCHI/claude-project-template --private --clone`
 - **stack 依存部分**: `<!-- @stack:replace --> 〜 <!-- @stack:end -->` ブロックで囲み、init 後に手動で書き換え。`init-project.sh` が grep で残存検出する
 - **ラベル**: `.github/labels.yml` を single source of truth とし、`.github/workflows/sync-labels.yml` が main 更新時に `gh label create` で同期
 - **skill 設定**: `.claude/settings.json` には permissions のみ。skill 一覧は `.claude/SKILLS.md` に列挙（user-global で enable される前提）

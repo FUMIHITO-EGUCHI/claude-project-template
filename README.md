@@ -1,6 +1,6 @@
 # claude-project-template
 
-kurahuta が新規プロジェクトを立ち上げるときの雛形。Claude Code + Codex + 人間 1 名による多 AI 開発体制を前提に、以下を即座に揃える。
+新規プロジェクトを立ち上げるときの雛形。Claude Code + Codex + 人間 1 名による多 AI 開発体制を前提に、以下を即座に揃える。
 
 - `CLAUDE.md` / `AGENTS.md` — 行動原則と AI 役割分担
 - `.claude/rules/` — handoff / TypeScript / Windows shell encoding の path-scoped ルール
@@ -17,7 +17,7 @@ kurahuta が新規プロジェクトを立ち上げるときの雛形。Claude C
 このリポジトリを GitHub 上で **Template repository** として登録した上で:
 
 ```sh
-gh repo create my-new-project --template kurahuta/claude-project-template --private --clone
+gh repo create my-new-project --template FUMIHITO-EGUCHI/claude-project-template --private --clone
 cd my-new-project
 ```
 
