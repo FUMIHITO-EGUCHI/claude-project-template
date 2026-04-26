@@ -1,0 +1,53 @@
+name: Bug
+description: 既存機能の不具合報告
+title: "[bug] "
+labels: ["status: todo", "type: bug"]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: 何が起きているか（1〜3 行）
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Repro steps
+      description: 再現手順。可能なら最小再現ケースを書く
+      placeholder: |
+        1. 〜を開く
+        2. 〜を実行
+        3. ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: env
+    attributes:
+      label: Environment
+      description: 実行環境（OS / ランタイム / 依存パッケージのバージョン等）
+    validations:
+      required: false
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes / Logs / Screenshots
+    validations:
+      required: false

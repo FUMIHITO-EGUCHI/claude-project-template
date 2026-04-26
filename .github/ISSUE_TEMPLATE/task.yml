@@ -1,0 +1,59 @@
+name: Task
+description: AI 向けタスク packet（feature / refactor / 小粒実装）
+title: "[task] "
+labels: ["status: todo"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        AI（Claude / Codex）が着手できる粒度のタスクを記述してください。
+        完了判定は人間が行います。AI は `status: ready-for-close` を付けて完了申請します。
+
+  - type: textarea
+    id: objective
+    attributes:
+      label: Objective
+      description: このタスクで達成したいこと（1〜3 行）
+      placeholder: 例) ログ出力に request id を含める
+    validations:
+      required: true
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope / Files in scope
+      description: 触る想定のファイル・モジュール
+      placeholder: |
+        - src/foo/bar.ts
+        - src/foo/bar.types.ts
+    validations:
+      required: false
+
+  - type: textarea
+    id: checklist
+    attributes:
+      label: Checklist
+      description: 作業項目。AI が進捗に合わせてチェックを更新する
+      value: |
+        - [ ]
+    validations:
+      required: false
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: 完了と認めるための条件
+      placeholder: |
+        - `npm run typecheck` / `npm run build` が通る
+        - 影響箇所を手動確認
+    validations:
+      required: true
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes / Links
+      description: 関連 Issue、Gist（findings）、参照リンク
+    validations:
+      required: false

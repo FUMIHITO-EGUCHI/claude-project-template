@@ -1,0 +1,28 @@
+---
+paths:
+  - "src/features/example/**"
+---
+
+# Example: stack-specific path-scoped rules
+
+このファイルはテンプレ用のサンプル。実プロジェクトでは:
+
+1. ファイル名を意味のある名前に変更（例: `react-viewer.md`, `extension-entrypoints.md`）
+2. `paths:` を実際のパス glob に変更
+3. 本文を実 stack のルールに書き換え
+
+例:
+
+```markdown
+---
+paths:
+  - "src/features/viewer/**"
+---
+
+# React Viewer Rules
+
+- このディレクトリ配下のみ React を使う
+- データ層（DB / fetch）は viewer から直接呼ばず props で受け取る
+```
+
+不要ならファイルごと削除する。

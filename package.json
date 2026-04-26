@@ -1,0 +1,8 @@
+{
+  "name": "PROJECT_NAME_PLACEHOLDER",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "precommit:check": "echo '(precommit:check is a no-op until configured — replace this with npm run typecheck etc.)'"
+  }
+}

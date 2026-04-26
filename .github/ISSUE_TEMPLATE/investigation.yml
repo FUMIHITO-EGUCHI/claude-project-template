@@ -1,0 +1,57 @@
+name: Investigation
+description: 調査・再現・原因切り分けタスク（実装前の前調査）
+title: "[invest] "
+labels: ["status: todo", "type: investigation"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        調査タスクです。最終成果物は「調査レポート」（Issue 内コメント or Secret Gist）とします。
+        実装が必要と分かった場合は、別 Issue（type: feature / bug）を立てて close します。
+
+  - type: textarea
+    id: question
+    attributes:
+      label: Question / Hypothesis
+      description: 何を明らかにしたいか。仮説があれば書く
+      placeholder: 例) 特定環境でのみ build が失敗する原因は何か？
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Repro steps (if any)
+      description: 既知の再現手順
+    validations:
+      required: false
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      description: 調査対象のファイル・モジュール・挙動範囲
+    validations:
+      required: false
+
+  - type: textarea
+    id: checklist
+    attributes:
+      label: Checklist
+      value: |
+        - [ ] 再現環境の確定
+        - [ ] 原因仮説の検証
+        - [ ] レポート作成
+    validations:
+      required: false
+
+  - type: textarea
+    id: deliverable
+    attributes:
+      label: Deliverable
+      description: この Issue の完了と認める成果物
+      placeholder: |
+        - 調査レポート（Secret Gist）
+        - 必要なら後続 Issue を 1 件以上立てる
+    validations:
+      required: true

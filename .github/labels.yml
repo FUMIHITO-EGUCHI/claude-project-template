@@ -1,0 +1,64 @@
+# GitHub Labels — single source of truth
+# 同期: .github/workflows/sync-labels.yml が main 更新時に gh label で同期する。
+# 手動同期: sh scripts/sync-labels.sh
+#
+# 軸:
+#   status:    タスクの状態
+#   owner:     担当（AI / 人間）
+#   priority:  優先度
+#   type:      タスクの性質
+#   area:      対象領域（プロジェクトごとに編集）
+
+# --- status (タスク状態) ---
+- name: "status: todo"
+  color: "ededed"
+  description: "未着手"
+- name: "status: in-progress"
+  color: "0e8a16"
+  description: "進行中"
+- name: "status: blocked"
+  color: "b60205"
+  description: "ブロック中（理由はコメント）"
+- name: "status: ready-for-close"
+  color: "1d76db"
+  description: "AI による完了申請。close は人間のみ"
+
+# --- owner (担当) ---
+- name: "owner: claude"
+  color: "c5def5"
+  description: "Claude Code が担当"
+- name: "owner: codex"
+  color: "d4c5f9"
+  description: "Codex が担当"
+- name: "owner: human"
+  color: "fef2c0"
+  description: "人間が担当"
+
+# --- priority ---
+- name: "priority: high"
+  color: "d93f0b"
+- name: "priority: medium"
+  color: "fbca04"
+- name: "priority: low"
+  color: "c2e0c6"
+
+# --- type ---
+- name: "type: feature"
+  color: "0075ca"
+- name: "type: bug"
+  color: "d73a4a"
+- name: "type: investigation"
+  color: "a2eeef"
+- name: "type: refactor"
+  color: "5319e7"
+
+# --- area (プロジェクトごとに追加・削除する) ---
+- name: "area: handoff"
+  color: "bfd4f2"
+  description: "AI handoff / タスク管理周り"
+- name: "area: ci"
+  color: "bfd4f2"
+- name: "area: docs"
+  color: "bfd4f2"
+- name: "area: other"
+  color: "bfd4f2"

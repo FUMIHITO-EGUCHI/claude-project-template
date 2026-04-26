@@ -1,0 +1,17 @@
+#!/bin/sh
+# commit-msg hook
+# commit message に `#<issue>` または `[skip-issue]` が含まれるか検査する。
+# install with: sh scripts/setup-hooks.sh
+
+node scripts/check-commit-message.mjs "$1"
+status=$?
+
+if [ $status -ne 0 ]; then
+  echo ""
+  echo "commit-msg hook failed."
+  echo "Amend the commit message to include a GitHub Issue reference (e.g. #42)"
+  echo "or add [skip-issue] for trivial changes."
+  exit 1
+fi
+
+exit 0
