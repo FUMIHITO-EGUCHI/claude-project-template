@@ -1,0 +1,41 @@
+name: Claude issue triage
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  contents: read
+  issues: write
+  id-token: write
+
+jobs:
+  triage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: anthropics/claude-code-action@v1
+        with:
+          prompt: |
+            REPO: ${{ github.repository }}
+            ISSUE NUMBER: ${{ github.event.issue.number }}
+            TITLE: ${{ github.event.issue.title }}
+            BODY: ${{ github.event.issue.body }}
+            AUTHOR: ${{ github.event.issue.user.login }}
+
+            あなたはこのリポジトリの issue triage 担当。CLAUDE.md / docs/handoff/README.md / docs/handoff/ai-execution.md を参照して、以下を実行する：
+
+            1. `gh label list` で利用可能ラベルを取得
+            2. 本文の "強いモデルを要する兆候" チェックボックスと内容から `model: cheap-ok` / `model: standard` / `model: strong-required` を1つ判定して付与
+            3. 内容から `type:` と `area:` を1つずつ判定して付与（迷う場合は最も近いもの）
+            4. `status: todo` は既存テンプレで付与済みなので触らない
+            5. 短い triage コメントを1件残す（判定理由を3行以内）
+
+            **やってはいけないこと**:
+            - Issue を close しない
+            - `status: ready-for-close` を付けない
+            - 本文を編集しない
+            - 既に貼られているラベルを削除しない
+          claude_args: |
+            --allowedTools "Bash(gh label list:*),Bash(gh issue edit:*),Bash(gh issue comment:*),Bash(gh issue view:*)"

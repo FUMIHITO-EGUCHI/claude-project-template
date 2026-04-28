@@ -50,6 +50,8 @@ TODO: 何を達成するためのプロジェクトか。3〜6 行で。
 - Issue 作成は Claude / Codex / human いずれも可。テンプレ（Task / Investigation / Bug）→ 初期ラベル `status: todo` + `owner:` + `priority:` + `type:` + `area:`。他 AI に投げる場合は `owner: <相手>` で止める
 - 作業中は Issue コメントに逐次追記（本文は objective / scope / checklist のみ編集）。完了申請は `status: ready-for-close` + `## Result` / `## Verification` / `## Changed files` コメント。close は人間のみ
 - commit message に `#<issue>` 必須（雑務は `[skip-issue]`）。`commit-msg` hook が強制
+- Issue 作成時に `model:` ラベル（`cheap-ok` / `standard` / `strong-required`）を1つ付与する。判断材料は `task.yml` の "強いモデルを要する兆候" チェックボックス
+- GitHub Actions（`claude-issue-triage` / `claude-mention` / `claude-pr-review`）と CLI のルーティング指針は `docs/handoff/ai-execution.md`
 - 詳細運用は `docs/handoff/README.md`、AI 向け最短ルールは `.claude/rules/handoff.md`
 
 ## Decision Priorities

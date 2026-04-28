@@ -1,0 +1,44 @@
+name: Claude PR review
+
+on:
+  pull_request:
+    types: [opened, synchronize, ready_for_review]
+
+permissions:
+  contents: read
+  pull-requests: write
+  id-token: write
+
+jobs:
+  review:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: anthropics/claude-code-action@v1
+        with:
+          track_progress: true
+          prompt: |
+            REPO: ${{ github.repository }}
+            PR NUMBER: ${{ github.event.pull_request.number }}
+            BASE: ${{ github.event.pull_request.base.ref }}
+            HEAD: ${{ github.event.pull_request.head.ref }}
+
+            この PR を 5 軸でレビューする：correctness / readability / architecture / security / performance。CLAUDE.md / .claude/rules/ のルールを参照。
+
+            手順:
+            1. `git diff origin/${{ github.event.pull_request.base.ref }}...HEAD --stat` で変更概要
+            2. 重要な diff を読み、観点ごとに inline comment を付ける
+            3. 軽微な指摘はまとめて1つの summary コメントにする
+            4. commit message が `#<issue>` を含むか / `[skip-issue]` 妥当か確認
+            5. CLAUDE.md の "完了報告前は typecheck / build" が PR 説明で言及されているか確認
+
+            **やってはいけないこと**:
+            - PR を merge / close しない
+            - approve しない（人間レビュアー領域）
+            - inline comment を多発させない（重要箇所のみ）
+          claude_args: |
+            --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr:*),Bash(git diff:*),Bash(git log:*),Bash(git show:*)"

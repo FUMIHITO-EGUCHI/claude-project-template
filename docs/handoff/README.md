@@ -18,6 +18,7 @@
 | `priority:` | `high` / `medium` / `low` |
 | `type:` | `feature` / `bug` / `investigation` / `refactor` |
 | `area:` | プロジェクトごとに `.github/labels.yml` で定義 |
+| `model:` | `cheap-ok` / `standard` / `strong-required`（AI 実行制御。詳細は [ai-execution.md](./ai-execution.md)） |
 
 - 「done」は **close 状態**で表現する（`status: done` ラベルは存在しない）
 - close は**人間のみ**が行う

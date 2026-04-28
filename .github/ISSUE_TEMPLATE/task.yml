@@ -50,6 +50,19 @@ body:
     validations:
       required: true
 
+  - type: checkboxes
+    id: strong-signals
+    attributes:
+      label: 強いモデルを要する兆候
+      description: 1つでも該当すれば `model: strong-required` を貼る。なければ `model: standard`（既存パターン実装）か `model: cheap-ok`（整形・要約）を選ぶ。
+      options:
+        - label: DB / migration を変更する
+        - label: 認可・権限・セッションに触れる
+        - label: 状態管理・並行処理・非同期に触れる
+        - label: 仕様が曖昧、または複数解釈がある
+        - label: 失敗時の手戻りが大きい / 不可逆
+        - label: 複数ファイル横断の設計変更
+
   - type: textarea
     id: notes
     attributes:

@@ -32,8 +32,9 @@
 - **close は人間のみ**。AI は close しない
 - commit message は `#<issue>` を必須（雑務は `[skip-issue]`）。`commit-msg` hook が強制
 - AI 間 handoff は `docs/handoff/README.md` の雛形に従う
+- Issue 作成時に `model:` ラベル（`cheap-ok` / `standard` / `strong-required`）を1つ付与。判断材料は `task.yml` の "強いモデルを要する兆候" チェックボックス
 
-詳細は `docs/handoff/README.md` を参照。
+詳細は `docs/handoff/README.md` を参照。AI 実行制御（GitHub Actions ルーティング、`model:` ラベル運用、コスト管理）は `docs/handoff/ai-execution.md`。
 
 ## ディレクトリ構造
 

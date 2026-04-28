@@ -1,0 +1,49 @@
+name: Claude @mention
+
+on:
+  issue_comment:
+    types: [created]
+  pull_request_review_comment:
+    types: [created]
+  issues:
+    types: [assigned]
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+  id-token: write
+
+jobs:
+  respond:
+    if: |
+      (github.event.comment != null && contains(github.event.comment.body, '@claude')) ||
+      (github.event.action == 'assigned' && github.event.assignee.login == 'claude')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: anthropics/claude-code-action@v1
+        with:
+          track_progress: true
+          prompt: |
+            REPO: ${{ github.repository }}
+            EVENT: ${{ github.event_name }}
+            ISSUE/PR NUMBER: ${{ github.event.issue.number || github.event.pull_request.number }}
+
+            あなたはこの Issue/PR の担当 AI。ユーザーから @claude で呼ばれた、または assign された。CLAUDE.md / docs/handoff/README.md / docs/handoff/ai-execution.md のルールを厳守する。
+
+            手順:
+            1. `gh issue view <n>` または `gh pr view <n>` で Issue/PR の現状を取得
+            2. 既存ラベル（特に `model:` `status:` `owner:`）を確認
+            3. ユーザーの依頼内容に応じて：質問応答 / 調査 / 実装 / レビュー
+            4. 進捗は track_progress コメントに任せる（手書きの経過コメントは追加しない）
+            5. 完了したら `status: ready-for-close` を付け、Result / Verification / Changed files を含む最終コメントを1件残す
+
+            **やってはいけないこと**:
+            - Issue を close しない（人間のみ）
+            - 本文を編集しない（objective / scope / checklist 以外）
+            - commit message から `#<issue>` を省略しない
+            - `--no-verify` で hook を回避しない
+          claude_args: |
+            --allowedTools "Bash(gh issue:*),Bash(gh pr:*),Bash(gh label list:*),Bash(npm run typecheck:*),Bash(npm run build:*),Bash(npm test:*),Bash(git:*)"

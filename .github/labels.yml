@@ -52,6 +52,25 @@
 - name: "type: refactor"
   color: "5319e7"
 
+# --- model (どの強さのモデルで進めるか) ---
+- name: "model: cheap-ok"
+  color: "c2e0c6"
+  description: "軽量モデル（Haiku 等）で足りる：候補抽出・整形・要約"
+- name: "model: standard"
+  color: "fbca04"
+  description: "標準モデル（Sonnet 等）：既存パターンに沿った実装・テスト追加"
+- name: "model: strong-required"
+  color: "d93f0b"
+  description: "強いモデル（Opus 等）必須：認可/DB/状態管理/曖昧仕様/根本原因調査"
+
+# --- 振り返り（完了時に自分で貼る） ---
+- name: "cost: overrun"
+  color: "5319e7"
+  description: "完了時の振り返り：想定より燃えた（軽量で済むと思ったが手戻りした 等）"
+- name: "model: was-overkill"
+  color: "5319e7"
+  description: "完了時の振り返り：strong を使ったが standard で足りた"
+
 # --- area (プロジェクトごとに追加・削除する) ---
 - name: "area: handoff"
   color: "bfd4f2"
