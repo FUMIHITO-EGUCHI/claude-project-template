@@ -34,7 +34,7 @@
 - AI 間 handoff は `docs/handoff/README.md` の雛形に従う
 - Issue 作成時に `model:` ラベル（`cheap-ok` / `standard` / `strong-required`）を1つ付与。判断材料は `task.yml` の "強いモデルを要する兆候" チェックボックス
 
-詳細は `docs/handoff/README.md` を参照。AI 実行制御（GitHub Actions ルーティング、`model:` ラベル運用、コスト管理）は `docs/handoff/ai-execution.md`。
+詳細は `docs/handoff/README.md` を参照。AI 実行制御（GitHub Actions ルーティング、`model:` ラベル運用、コスト管理）は `docs/handoff/ai-execution.md`。運用ルールの根拠は ADR（`docs/decisions/0002-github-operation-sot.md` / `0003-human-acceptance-and-ai-tutor.md`）。
 
 ## ディレクトリ構造
 

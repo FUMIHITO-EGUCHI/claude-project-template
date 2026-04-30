@@ -1,6 +1,6 @@
 # AI Handoff — Issue-based Workflow
 
-このリポジトリのタスク管理は **GitHub Issues + Projects v2** を single source of truth とする。
+このリポジトリのタスク管理は **GitHub Issues + Projects v2** を single source of truth とする。運用ルールの根拠は ADR-0002（`docs/decisions/0002-github-operation-sot.md`）、Human acceptance と学習ループは ADR-0003（`docs/decisions/0003-human-acceptance-and-ai-tutor.md`）に集約する。
 
 - Backend: GitHub Issues
 - Human view: GitHub Projects v2 ボード（プロジェクトごとに 1 枚作成）
