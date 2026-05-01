@@ -51,7 +51,7 @@ flowchart TD
 | `.github/labels.yml` + sync workflow | 6 軸ラベル（status / model / owner / priority / type / area）を GitHub に自動同期 |
 | `.github/workflows/claude-issue-triage.yml` | Issue 作成時に model: / type: / area: を自動付与 |
 | `.github/workflows/claude-mention.yml` | @claude メンションで応答（質問 / 調査 / 実装、track_progress 付き） |
-| `.github/workflows/claude-pr-review.yml` | PR 作成時に 5 軸レビュー + Learning notes + verdict marker |
+| `.github/workflows/claude-pr-review.yml` | PR 作成時に 5 軸レビュー + Learning notes（後段の classifier step が verdict marker を必ず付与） |
 | `.github/workflows/rework-tracker.yml` | AI review の `changes-requested-major` を検知して `rework: N` を自動加算 |
 | `.github/workflows/security.yml` | gitleaks (secret) / Trivy (vuln+misconfig) / shellcheck (shell lint) を並列実行 |
 | `.github/dependabot.yml` | npm / github-actions の weekly 更新 |
