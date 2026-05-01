@@ -50,6 +50,22 @@ body:
     validations:
       required: true
 
+  - type: textarea
+    id: human-evidence
+    attributes:
+      label: Evidence of acceptance（人間が確認する手順）
+      description: |
+        コードを読まずに accept できるよう、AI に「これを実行して結果を貼って」と渡せる手順を書く。
+        AI は完了申請時にこの手順を実行してスクリーンショット・出力・ログを Issue に貼る。
+        ADR-0003 の3点ゲート（AI review / CI green / Human evidence）の最後の1点。
+      placeholder: |
+        1. `npm run dev` で起動
+        2. /settings を開きダークモードトグルを ON
+        3. 背景が #1a1a1a になることを確認
+        4. リロードして設定が保持されていることを確認
+    validations:
+      required: true
+
   - type: checkboxes
     id: strong-signals
     attributes:
