@@ -50,15 +50,6 @@ body:
     validations:
       required: true
 
-  - type: textarea
-    id: human-evidence
-    attributes:
-      label: Evidence of acceptance（人間が確認する手順）
-      description: "コードを読まずに accept できる手順を書く。AI が完了申請時にこの手順を実行し、出力・ログ・スクショを Issue に貼る（ADR-0003 3点ゲート）。"
-      placeholder: "1. npm run dev で起動\n2. /settings を開きダークモードトグルを ON\n3. 背景が #1a1a1a になることを確認\n4. リロードして設定が保持されていることを確認"
-    validations:
-      required: true
-
   - type: checkboxes
     id: strong-signals
     attributes:
