@@ -41,7 +41,7 @@ acceptance を3点ゲート方式にする：
 - **claude-pr-review.yml の prompt 拡張**: レビュー出力末尾に "## Learning notes for the human" を追加。PJ 固有の概念最大3つ + 公式ドキュメントリンク + 1分以内で試せる小実験
 - **学習ログ `docs/learning/YYYY-MM.md`**: 月1ファイル。月末に AI が「その月の PR で出てきた新しい概念」を集約し、人間が「自分で説明できるか」チェックボックスを埋める運用
 - **`@claude explain` 質問テンプレ**: `claude-mention.yml` 用の質問フォーマットを `docs/handoff/ai-execution.md` に明記。「自分の理解 / 詰まっている部分 / learning level」を先に書かせる
-- **rework count コメント**: Issue クローズ時に `rework: N (理由)` を1行残す。月次で `rework: 0` 比率を見て Issue 仕様精度と AI 品質を振り返る
+- **rework count**: ラベル `rework: 1` / `rework: 2` / `rework: 3+` を `rework-tracker.yml` が AI review の `changes-requested-major` verdict に応じて自動付与（PR と紐付き Issue 両方）。理由は close 時のコメントに1行残すと月次振り返りに効く。集計は `gh issue list --label "rework: N"`
 
 関連資料：
 
