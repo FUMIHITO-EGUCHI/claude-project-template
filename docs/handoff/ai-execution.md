@@ -126,15 +126,17 @@ npx ccusage@latest
 
 ## 8. セットアップ
 
-### 初期運用（無料／追加課金なし）
+新 PJ 立ち上げ手順は [`bootstrap.md`](./bootstrap.md) に集約。要点だけ:
 
-Claude サブスクリプション（Pro / Max）の OAuth 連携で動かす。
+1. `sh scripts/init-project.sh "<pj>" "<desc>"` でプレースホルダ置換 + hooks + ラベル同期
+2. Claude Code CLI で `/install-github-app` 実行 → `CLAUDE_CODE_OAUTH_TOKEN` secret が自動登録
+3. **副作用で生成される `claude-code-review.yml` は削除**（`claude-pr-review.yml` と重複）
+4. 各 workflow の `with:` に `claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}` が配線済みであること
+5. workflow 編集は **default branch (main) と PR branch の内容を一致させる**（claude-code-action のセキュリティ仕様。PR branch でだけ workflow を変えると 401）
 
-1. Claude Code CLI で `/install-github-app` を実行 → GitHub App が OAuth でリポジトリに連携
-2. main にマージ → `sync-labels.yml` が `model:` 系ラベルをリポジトリに反映
-3. ダミー Issue を作成して `claude-issue-triage.yml` の挙動を確認
+ハマりどころ表は [`bootstrap.md` §5](./bootstrap.md#5-ハマりどころbootstrap-時の典型エラー) 参照。
 
-workflow 側に `anthropic_api_key:` は **書かない**（OAuth 経由で認証される）。
+workflow 側に `anthropic_api_key:` は **書かない**（OAuth 経由で認証）。
 
 ### 将来検討：Anthropic API キー導入
 
