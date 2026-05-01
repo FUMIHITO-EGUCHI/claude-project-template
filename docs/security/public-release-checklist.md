@@ -115,3 +115,4 @@ git ls-files | grep -E '\.(env|pem|key|har)$|credentials|secret'
 - [ ] 1 週間後: `gh api repos/<owner>/<repo>/traffic/clones` でアクセス監視
 - [ ] gitleaks workflow が PR 毎に走っていること（[`.github/workflows/security.yml`](../../.github/workflows/security.yml)）
 - [ ] dependabot PR が来たらマージ運用
+- [ ] Issue / PR の不審な活動（大量 spam、bot 攻撃）を週次で確認
