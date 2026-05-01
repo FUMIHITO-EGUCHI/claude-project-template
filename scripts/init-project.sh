@@ -53,6 +53,7 @@ replace_in() {
     const name = process.argv[2];
     const desc = process.argv[3];
     let s = fs.readFileSync(path, 'utf8');
+    s = s.replace(/<!-- @template:notice-start -->[\s\S]*?<!-- @template:notice-end -->\n?\n?/g, '');
     s = s.replaceAll('<!-- @project:name -->', name);
     s = s.replaceAll('<!-- @project:description -->', desc);
     s = s.replaceAll('PROJECT_NAME_PLACEHOLDER', name);

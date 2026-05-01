@@ -1,3 +1,7 @@
+<!-- @template:notice-start -->
+> **Note**: このファイルは [`claude-project-template`](https://github.com/FUMIHITO-EGUCHI/claude-project-template) の一部。`sh scripts/init-project.sh` で展開すると、この通知ブロックは削除され、プレースホルダがプロジェクト名・概要に置換される。
+<!-- @template:notice-end -->
+
 # <!-- @project:name -->
 
 <!-- @project:description -->
