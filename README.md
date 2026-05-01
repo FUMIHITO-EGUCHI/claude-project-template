@@ -53,7 +53,7 @@ flowchart TD
 | `.github/workflows/claude-mention.yml` | @claude メンションで応答（質問 / 調査 / 実装、track_progress 付き） |
 | `.github/workflows/claude-pr-review.yml` | PR 作成時に 5 軸レビュー + Learning notes + verdict marker |
 | `.github/workflows/rework-tracker.yml` | AI review の `changes-requested-major` を検知して `rework: N` を自動加算 |
-| `.github/workflows/security.yml` | gitleaks による secret scan（push / PR） |
+| `.github/workflows/security.yml` | gitleaks (secret) / Trivy (vuln+misconfig) / shellcheck (shell lint) を並列実行 |
 | `.github/dependabot.yml` | npm / github-actions の weekly 更新 |
 | `docs/handoff/` | GitHub Issues ベース handoff 運用ガイド + AI 実行制御 |
 | `docs/decisions/` | ADR ひな形 + 参考 ADR（Issue SoT / Human acceptance / Learning loop） |

@@ -1,0 +1,5 @@
+# Force LF for shell scripts and git hooks (avoid SC1017 on Windows checkout)
+*.sh text eol=lf
+scripts/pre-commit text eol=lf
+scripts/commit-msg text eol=lf
+*.mjs text eol=lf
