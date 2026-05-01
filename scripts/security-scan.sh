@@ -76,12 +76,9 @@ _list_shell_files_z() {
 run_shellcheck() {
   require_tool shellcheck https://github.com/koalaman/shellcheck#installing || return $?
   echo "[security-scan] shellcheck: *.sh + shebang-detected shell files (warning level)"
-  list=$(_list_shell_files_z)
-  if [ -z "$list" ]; then
-    echo "[security-scan]   no shell files found"
-    return 0
-  fi
-  printf '%s' "$list" | xargs -0 shellcheck -S warning
+  # $() で受けると NUL バイトが消えて xargs -0 が壊れるため直接パイプする。
+  # xargs -r (GNU) で空入力時に shellcheck を呼ばない。
+  _list_shell_files_z | xargs -0 -r shellcheck -S warning
 }
 
 case "$MODE" in
