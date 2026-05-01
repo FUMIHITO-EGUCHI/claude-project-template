@@ -30,7 +30,31 @@ jobs:
 
             この PR を 5 軸でレビューする：correctness / readability / architecture / security / performance。CLAUDE.md / .claude/rules/ のルールを参照。
 
-            手順:
+            ## 最重要: コメント末尾の verdict marker（rework auto-counter 用）
+
+            **このレビューコメントの絶対最終行**に、以下の HTML コメントを**そのままの文字列で1個だけ**含めること。これは rework-tracker.yml が grep する **機械的契約**であり、欠落するとカウンタが破綻する。
+
+            判定値（「指摘を反映しないと merge すべきでないか」を yes/no で判断する）:
+
+            ```
+            <!-- ai-review-verdict: approved -->
+            ```
+            → 全軸 ✅ で修正不要
+
+            ```
+            <!-- ai-review-verdict: changes-requested-minor -->
+            ```
+            → cosmetic / コメント文言 / 命名 等の軽微指摘のみ（merge を妨げない）
+
+            ```
+            <!-- ai-review-verdict: changes-requested-major -->
+            ```
+            → correctness / security / architecture / performance に踏み込む実質的指摘あり（指摘反映なしで merge 不可）
+
+            **検証**: コメント post 直前に「最終行が `<!-- ai-review-verdict:` で始まり ` -->` で終わる」ことを必ず自分で確認する。Learning notes セクションの後ろに置く。
+
+            ## 手順
+
             1. `git diff origin/${{ github.event.pull_request.base.ref }}...HEAD --stat` で変更概要
             2. 重要な diff を読み、観点ごとに inline comment を付ける
             3. 軽微な指摘はまとめて1つの summary コメントにする
@@ -44,7 +68,7 @@ jobs:
 
             ## 必須出力: Learning notes for the human
 
-            レビュー出力末尾に以下のセクションを必ず追加する（ADR-0003 学習ループ）：
+            レビュー出力に以下のセクションを必ず追加する（ADR-0003 学習ループ）：
 
             ```
             ## Learning notes for the human
@@ -63,14 +87,65 @@ jobs:
             - 公式ドキュメントへのリンクが提供できない概念は出さない（hallucination 抑制）
             - 概念が見当たらないなら「今回は新規概念なし」と1行書いて終わる。無理に3つ捻り出さない
 
-            ## 必須出力: verdict marker（rework auto-counter 用）
+            ## 出力構造（必ずこの順）
 
-            レビューコメントの **最終行** に必ず以下の HTML コメントを **1個だけ** 含める。rework-tracker.yml が grep して rework count を自動付与する。
-
-            - 全軸 ✅ で修正不要なら: `<!-- ai-review-verdict: approved -->`
-            - cosmetic / コメント文言 / 命名 など軽微指摘のみ（merge を妨げない）: `<!-- ai-review-verdict: changes-requested-minor -->`
-            - correctness / security / architecture / performance に踏み込む実質的指摘あり: `<!-- ai-review-verdict: changes-requested-major -->`
-
-            判定基準: 「指摘を反映しないと merge すべきでないか」を yes/no で判断。yes なら major、no で改善余地のみなら minor、指摘なしなら approved。
+            1. 5軸レビュー本文
+            2. Learning notes for the human
+            3. **絶対最終行**: `<!-- ai-review-verdict: ... -->`（上記3値のいずれか1つ）
           claude_args: |
             --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr:*),Bash(git diff:*),Bash(git log:*),Bash(git show:*)"
+
+      - name: Verify verdict marker
+        id: verify
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+              per_page: 100,
+            });
+            const claudeComments = comments.filter(c =>
+              c.user && (c.user.login === 'claude' || c.user.type === 'Bot' && /claude/i.test(c.user.login || ''))
+            );
+            const latest = claudeComments[claudeComments.length - 1];
+            const body = latest ? latest.body : '';
+            const present = /<!--\s*ai-review-verdict:\s*(approved|changes-requested-minor|changes-requested-major)\s*-->/.test(body);
+            core.setOutput('present', present ? 'true' : 'false');
+            core.setOutput('comment_id', latest ? String(latest.id) : '');
+            core.info(`marker present: ${present}`);
+
+      - name: Classify fallback (only when marker missing)
+        if: steps.verify.outputs.present == 'false'
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: |
+            REPO: ${{ github.repository }}
+            PR NUMBER: ${{ github.event.pull_request.number }}
+
+            前段の claude-code-action が PR レビューコメントを post したが、必須の verdict marker を出力し忘れた。本ステップは fallback として、レビュー本文を読み marker のみを別コメントとして post する。
+
+            ## 手順
+
+            1. `gh pr view ${{ github.event.pull_request.number }} --comments` で最新の claude レビューコメントを取得
+            2. その本文を読み、内容から以下のいずれかを判定:
+               - 修正不要・全軸 ✅ → `approved`
+               - 軽微（cosmetic / 文言 / 命名 等で merge を妨げない） → `changes-requested-minor`
+               - correctness / security / architecture / performance の実質指摘あり → `changes-requested-major`
+            3. **`gh pr comment ${{ github.event.pull_request.number }} --body "..."`** で以下の本文を post（`...` の値のみ置換）:
+
+            ```
+            <!-- ai-review-verdict: <判定値> -->
+
+            _auto-classified by fallback step (primary review missed marker)_
+            ```
+
+            ## 制約
+
+            - 出力は marker コメントの post **のみ**。それ以外の操作禁止
+            - レビュー本文の再評価は不要（前段の判断を尊重）。書かれている内容の重みから marker 値を選ぶだけ
+            - 確信が持てない場合は安全側の `changes-requested-major`
+          claude_args: |
+            --allowedTools "Bash(gh pr:*)"
