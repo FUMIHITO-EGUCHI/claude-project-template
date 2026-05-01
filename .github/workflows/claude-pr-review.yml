@@ -40,5 +40,26 @@ jobs:
             - PR を merge / close しない
             - approve しない（人間レビュアー領域）
             - inline comment を多発させない（重要箇所のみ）
+
+            ## 必須出力: Learning notes for the human
+
+            レビュー出力末尾に以下のセクションを必ず追加する（ADR-0003 学習ループ）：
+
+            ```
+            ## Learning notes for the human
+
+            ### この PR で出てきた概念（最大3つ）
+            - <概念1>: <1〜2行の説明> — <公式ドキュメントの該当ページ URL>
+            - <概念2>: <1〜2行の説明> — <公式ドキュメントの該当ページ URL>
+            - <概念3>: <1〜2行の説明> — <公式ドキュメントの該当ページ URL>
+
+            ### 1分で試せる小実験
+            - <手を動かして概念を確認できるコマンド or 操作を1つ>
+            ```
+
+            **重要な制約**:
+            - 「言語の文法は分かるが、ライブラリと PJ 固有のパターンは初見」レベルを想定
+            - 公式ドキュメントへのリンクが提供できない概念は出さない（hallucination 抑制）
+            - 概念が見当たらないなら「今回は新規概念なし」と1行書いて終わる。無理に3つ捻り出さない
           claude_args: |
             --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr:*),Bash(git diff:*),Bash(git log:*),Bash(git show:*)"
