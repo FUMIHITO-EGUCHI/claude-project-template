@@ -24,3 +24,8 @@ updates:
     open-pull-requests-limit: 5
     commit-message:
       prefix: "chore(actions)"
+    # major bump は breaking change が多いので除外。明示的な major 更新は手動で行う。
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - version-update:semver-major
