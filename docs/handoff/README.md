@@ -13,7 +13,7 @@
 
 | Category | 値 |
 |---|---|
-| `status:` | `todo` / `in-progress` / `blocked` / `ready-for-close` |
+| `status:` | `todo` / `in-progress` / `blocked` / `review-pending` / `evidence-required` / `accepted` / `ready-for-close` |
 | `owner:` | `claude` / `codex` / `human` |
 | `priority:` | `high` / `medium` / `low` |
 | `type:` | `feature` / `bug` / `investigation` / `refactor` |
@@ -22,6 +22,20 @@
 
 - 「done」は **close 状態**で表現する（`status: done` ラベルは存在しない）
 - close は**人間のみ**が行う
+
+### 状態遷移（ADR-0003 以降）
+
+```
+todo → in-progress → review-pending → evidence-required → accepted → close
+                  ↘ blocked ↗
+```
+
+- `review-pending`: AI 実装完了、PR 作成済み。`claude-pr-review.yml` の review agent 確認中
+- `evidence-required`: review 通過後、AI が `task.yml` の "Evidence of acceptance" 手順を実機で実行し、結果を Issue に貼った状態。**人間 acceptance 待ち**
+- `accepted`: 人間が evidence を確認し OK と判定。close 待ち
+- `ready-for-close`: ADR-0003 以前の旧フロー互換。新規 Issue は上記6状態フローを使う
+
+人間は `evidence-required` 状態の Issue で **コードを読まずに** evidence を確認するだけが正規ルート（ADR-0003）。
 
 ---
 
@@ -70,10 +84,11 @@ blank issue は無効化している。
 - Issue 本文（body）の編集は **objective / scope / checklist のメンテナンスのみ**。経過はコメントで表現
 - ブロックされたら `status: in-progress` を外し `status: blocked` を付け、理由をコメント
 
-### 3.3 完了申請（AI による）
+### 3.3 完了申請（AI による）— 6状態フロー（ADR-0003）
 
-1. `status: in-progress` を外し `status: ready-for-close` を付ける
-2. 以下を含む **最終コメントを 1 件** 投稿:
+1. **PR 作成後**: `status: in-progress` を外し `status: review-pending` を付ける。`claude-pr-review.yml` が起動して 5軸レビューを inline comment する
+2. **review 通過後**: `status: review-pending` を外し `status: evidence-required` を付ける。同時に Issue Template の "Evidence of acceptance" 手順を実機で実行し、結果（出力 / スクリーンショット / ログ）を Issue コメントに貼る
+3. **evidence コメントには以下を含む**:
 
 ```markdown
 ## Result
@@ -83,11 +98,23 @@ blank issue は無効化している。
 <`npm run typecheck` の出力（末尾 20 行程度）>
 <`npm run build` の出力（末尾 20 行程度）>
 
+## Evidence
+<task.yml の "Evidence of acceptance" 手順を実行した結果>
+<スクリーンショット / 出力 / ログを貼る>
+
 ## Changed files
 <`git diff --name-only <base>..HEAD` の結果>
+
+## Rework count
+rework: 0  # 自分が evidence を貼り直した回数。rejected → 修正 → 再 evidence で +1
 ```
 
-3. **AI は close しない**。ここで人間の確認待ちに入る。
+4. **AI は close しない**。`status: evidence-required` で人間の確認待ちに入る
+5. **人間の操作**: evidence を見て OK なら `status: evidence-required` を外し `status: accepted` を付け close。NG なら理由をコメントし `status: in-progress` に戻す（rework count +1）
+
+### 3.3-legacy 旧フロー（ready-for-close）
+
+ADR-0003 以前から進行中の Issue 互換のため、`status: ready-for-close` も残してある。新規 Issue は上記 6 状態フローを使う。
 
 ### 3.4 Close（人間のみ）
 

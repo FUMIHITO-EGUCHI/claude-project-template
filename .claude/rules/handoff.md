@@ -21,7 +21,7 @@ paths:
 
 | Category | 値 |
 |---|---|
-| `status:` | `todo` / `in-progress` / `blocked` / `ready-for-close` |
+| `status:` | `todo` / `in-progress` / `blocked` / `review-pending` / `evidence-required` / `accepted` / `ready-for-close` |
 | `owner:` | `claude` / `codex` / `human` |
 | `priority:` | `high` / `medium` / `low` |
 | `type:` | `feature` / `bug` / `investigation` / `refactor` |
@@ -36,10 +36,16 @@ paths:
 1. **着手**: `status: todo` を外し `status: in-progress` を付ける。必要なら `owner:` を自分に。
 2. **進捗**: 意味あるステップごとに Issue コメントを追記（`YYYY-MM-DD <自分>:` で始める）
 3. **ブロック時**: `status: in-progress` を外し `status: blocked` を付け、理由をコメント
-4. **完了申請**: `status: in-progress` を外し `status: ready-for-close` を付け、以下を 1 コメントで:
-   - `## Result`（3〜10 行で要約）
-   - `## Verification`（`npm run typecheck` / `npm run build` の末尾）
-   - `## Changed files`（`git diff --name-only` 結果）
+4. **完了申請（ADR-0003 6状態フロー）**:
+   - PR 作成後: `in-progress` → `review-pending`（claude-pr-review.yml が起動）
+   - review 通過後: `review-pending` → `evidence-required`。Issue Template の "Evidence of acceptance" 手順を実機で実行し、結果を1コメントに：
+     - `## Result`（3〜10 行で要約）
+     - `## Verification`（typecheck / build の末尾）
+     - `## Evidence`（手順の実行結果 / スクショ / ログ）
+     - `## Changed files`（`git diff --name-only` 結果）
+     - `## Rework count`（`rework: N`）
+   - 人間が evidence を見て OK なら `evidence-required` → `accepted` → close
+   - **旧フロー** (`ready-for-close`) も互換のため残しているが、新規 Issue は上記6状態フローを使う
 
 ## AI 間 handoff
 
@@ -64,14 +70,15 @@ paths:
 - 雑務 escape: `[skip-issue]`
 - `commit-msg` hook が自動検査。`--no-verify` で回避しない
 
-## Definition of Done
+## Definition of Done（ADR-0003 6状態フロー）
 
 1. `npm run typecheck` pass
 2. `npm run build` pass
-3. `status: ready-for-close` 付与
-4. 最終コメントに Result / Verification / Changed files が揃う
+3. `claude-pr-review.yml` の review 通過
+4. `status: evidence-required` 付与 + Result / Verification / Evidence / Changed files / Rework count が揃ったコメント1件
 5. commit message に `#<issue>` 含む
-6. 人間が Issue を close（この 6 のみ AI 対象外）
+6. 人間が evidence を確認し `status: accepted` を付ける（AI 対象外）
+7. 人間が Issue を close（AI 対象外）
 
 ## Never
 
