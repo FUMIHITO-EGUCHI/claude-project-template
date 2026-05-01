@@ -1,65 +1,141 @@
 # claude-project-template
 
-新規プロジェクトを立ち上げるときの雛形。Claude Code + Codex + 人間 1 名による多 AI 開発体制を前提に、以下を即座に揃える。
+## どんな問題を解くか
 
-- `CLAUDE.md` / `AGENTS.md` — 行動原則と AI 役割分担
-- `.claude/rules/` — handoff / TypeScript / Windows shell encoding の path-scoped ルール
-- `.github/ISSUE_TEMPLATE/` — Task / Bug / Investigation
-- `.github/labels.yml` + sync workflow — `status:` / `owner:` / `priority:` / `type:` / `area:` の 5 軸ラベル
-- `docs/handoff/` — GitHub Issues ベース handoff 運用ガイド
-- `docs/decisions/` — ADR ひな形 + 参考 ADR
-- `scripts/` — commit-msg hook（`#<issue>` 強制）+ setup-hooks
+Claude Code と Codex を 1 人開発で併用すると、こういうことが起きる:
+
+- **作業状態が散らばる** — どの Issue を誰が持っているか、どこまで進んだか、ローカルファイルや Slack にしか残らない
+- **責任境界が曖昧になる** — 「Claude に頼んだがどこまでやったか分からない」「Codex が途中で止まったまま放置」
+- **レビューが属人化する** — PR を誰がいつ何の軸でレビューしたか残らない。自分だけでは見落とす
+
+このテンプレは **GitHub Issues を唯一の状態管理軸**として、AI の入出力・担当切り替え・完了判定を機械的にコントロールする仕組みを提供する。AI のコードは触らず、**ガバナンスだけを持ち込む**のが特徴。
+
+---
+
+## 全体フロー
+
+```
+Issue 作成
+   │
+   ▼
+[claude-issue-triage.yml]
+   │  model: cheap-ok / standard / strong-required を自動付与
+   │  type: / area: を判定してラベル付与
+   │
+   ▼
+着手 (status: in-progress)
+   │
+   ├─ 調査・設計 ─── @claude mention → Claude Code (Opus)
+   └─ 実装 ───────── Codex / Claude Code
+   │
+   ▼
+PR 作成 (status: review-pending)
+   │
+   ├─ [claude-pr-review.yml]
+   │      5 軸レビュー: correctness / readability / architecture / security / performance
+   │      + Learning notes for the human（PR ごとに概念解説）
+   │
+   ├─ CI: npm run typecheck / build
+   │
+   ▼
+Evidence 提出 (status: evidence-required)
+   │  AI が task.yml "Evidence of acceptance" 手順を実機実行
+   │  出力・スクショ・ログを Issue にペースト
+   │
+   ▼
+Human 確認
+   │  コードを読まず Evidence だけ見て accept / reject
+   │
+   ├─ OK → status: accepted → close（人間のみ）
+   └─ NG → status: in-progress に戻す（rework count +1）
+```
+
+---
+
+## 何が入っているか
+
+| ファイル / ディレクトリ | 役割 |
+|---|---|
+| `CLAUDE.md` / `AGENTS.md` | 行動原則と AI 役割分担 |
+| `.claude/rules/` | handoff / TypeScript / Windows encoding の path-scoped ルール |
+| `.github/ISSUE_TEMPLATE/` | Task / Bug / Investigation テンプレ（Evidence of acceptance + strong-signals チェックボックス付き） |
+| `.github/labels.yml` + sync workflow | 6 軸ラベル（status / model / owner / priority / type / area）を GitHub に自動同期 |
+| `.github/workflows/claude-issue-triage.yml` | Issue 作成時に model: / type: / area: を自動付与 |
+| `.github/workflows/claude-mention.yml` | @claude メンションで応答（質問 / 調査 / 実装、track_progress 付き） |
+| `.github/workflows/claude-pr-review.yml` | PR 作成時に 5 軸レビュー + Learning notes |
+| `docs/handoff/` | GitHub Issues ベース handoff 運用ガイド + AI 実行制御 |
+| `docs/decisions/` | ADR ひな形 + 参考 ADR（Issue SoT / Human acceptance / Learning loop） |
+| `scripts/` | init-project.sh / commit-msg hook（`#<issue>` 強制）/ sync-labels |
+
+---
 
 ## 使い方
 
-### 1. 新規 PJ の作成
-
-このリポジトリを GitHub 上で **Template repository** として登録した上で:
+詳細な手順は **[`docs/handoff/bootstrap.md`](docs/handoff/bootstrap.md)** に集約してある。最短ルート:
 
 ```sh
-gh repo create my-new-project --template FUMIHITO-EGUCHI/claude-project-template --private --clone
-cd my-new-project
-```
+# 1. テンプレから新 PJ を作成
+gh repo create <owner>/<new-pj> --template FUMIHITO-EGUCHI/claude-project-template --private --clone
+cd <new-pj>
 
-### 2. 初期化
+# 2. プレースホルダ置換 + hooks + ラベル同期
+sh scripts/init-project.sh "<pj名>" "<説明>"
 
-```sh
-sh scripts/init-project.sh
-```
+# 3. Claude Code CLI で GitHub App 連携
+/install-github-app
+# → CLAUDE_CODE_OAUTH_TOKEN secret が自動登録される
+# → 自動生成された claude-code-review.yml は削除（claude-pr-review.yml と重複）
 
-対話で以下を聞かれる:
-
-- プロジェクト名（CLAUDE.md / AGENTS.md / README.md の `<!-- @project:name -->` を置換）
-- プロジェクト概要（`<!-- @project:description -->` を置換）
-
-スクリプトは以下も実行する:
-
-1. git hooks のインストール（`commit-msg` + `pre-commit`）
-2. ラベルの GitHub 同期（`gh label create` を `.github/labels.yml` から for ループ）
-3. テンプレ自身の README をプロジェクト用に置き換える提案
-
-### 3. 残った `<!-- @stack:replace -->` ブロックを書き換え
-
-`CLAUDE.md` / `AGENTS.md` の以下を実 stack に合わせて書き換える:
-
-```sh
+# 4. CLAUDE.md の @stack:replace ブロックを実スタックで埋める
 grep -rn '@stack:replace' .
 ```
 
-該当ブロック内の TODO を埋めれば完了。
+---
 
 ## ラベル
 
-| Category | 値 |
+### status:（Issue の状態遷移）
+
+| ラベル | 意味 |
 |---|---|
-| `status:` | `todo` / `in-progress` / `blocked` / `ready-for-close` |
+| `status: todo` | 未着手 |
+| `status: in-progress` | 作業中 |
+| `status: blocked` | ブロック中 |
+| `status: review-pending` | PR 作成済み、AI レビュー待ち |
+| `status: evidence-required` | レビュー通過、Evidence 提出済み、人間 acceptance 待ち |
+| `status: accepted` | 人間が Evidence を確認して OK。close 待ち |
+| `status: ready-for-close` | 旧フロー互換。新規 Issue は上記6状態を使う |
+
+### model:（AI モデル選定）
+
+| ラベル | 使う場面 |
+|---|---|
+| `model: cheap-ok` | 候補抽出 / 整形 / 要約 / 単純 rename |
+| `model: standard` | 既存パターンに沿った実装 / テスト追加 / 型修正 |
+| `model: strong-required` | 認可 / DB / 状態管理 / 曖昧仕様 / 根本原因調査 / 不可逆変更 |
+
+判定根拠は `task.yml` の "強いモデルを要する兆候" チェックボックス。
+
+### 振り返り用
+
+| ラベル | 使う場面 |
+|---|---|
+| `cost: overrun` | 想定より燃えた |
+| `model: was-overkill` | strong を使ったが standard で足りた |
+
+### その他
+
+| 軸 | 値 |
+|---|---|
 | `owner:` | `claude` / `codex` / `human` |
 | `priority:` | `high` / `medium` / `low` |
 | `type:` | `feature` / `bug` / `investigation` / `refactor` |
 | `area:` | プロジェクトごとに `.github/labels.yml` を編集 |
 
-詳細は `docs/handoff/README.md`。
+---
 
-## 設計判断
+## 設計判断（ADR）
 
-- ADR-0001: Template repository 戦略（`docs/decisions/`）
+- **ADR-0001**: Template repository 戦略
+- **ADR-0002**: GitHub Issues を single source of truth にする（`docs/decisions/0002-github-operation-sot.md`）
+- **ADR-0003**: Human acceptance 3点ゲートと Learning loop（`docs/decisions/0003-human-acceptance-and-ai-tutor.md`）
