@@ -55,12 +55,14 @@ jobs:
           cache: 'pip'
           cache-dependency-path: .github/workflows/requirements-semgrep.txt
       - run: pip install -r .github/workflows/requirements-semgrep.txt
-      # p/shell: eval / curl|sh / chmod 777 等の shell security pattern
+      # r/bash: curl-pipe-bash (curl|sh) / curl-eval / ifs-tampering 等の bash security
       # p/secrets: hardcoded credential pattern (gitleaks の取りこぼし補完)
+      # 注: semgrep registry に p/shell pack は存在しないため r/bash を使用。
+      # eval "$1" 単体 / chmod 777 のルールは現状なし（必要なら custom rule で追加）
       # WARNING 以上で fail。INFO はノイズ抑制で抜く
       - run: |
           semgrep scan \
-            --config p/shell \
+            --config r/bash \
             --config p/secrets \
             --error \
             --severity=WARNING \
