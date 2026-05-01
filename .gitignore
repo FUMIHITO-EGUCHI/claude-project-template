@@ -5,9 +5,40 @@ out/
 .output/
 coverage/
 *.log
-.env
-.env.local
 .DS_Store
+
+# secrets / env
+.env
+.env.*
+!.env.example
+!.env.sample
+
+# private keys / certificates
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+id_rsa
+id_ed25519
+id_ecdsa
+
+# service account / credentials
+*-credentials.json
+*-service-account.json
+gcp-key*.json
+aws-credentials*
+
+# DB dumps / backups
+*.sql
+*.sql.gz
+*.dump
+*.bak
+
+# captured traffic / exports
+*.har
+exports/
+dump/
 
 .mcp.json
 .serena/
