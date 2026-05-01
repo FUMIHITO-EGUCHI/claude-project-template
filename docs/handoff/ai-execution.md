@@ -233,3 +233,4 @@ gh issue list --state closed --search "rework: 0 in:comments updated:>YYYY-MM-01
 - solutions guide: <https://github.com/anthropics/claude-code-action/blob/main/docs/solutions.md>
 - gh-aw (GitHub Agentic Workflows): <https://github.github.com/gh-aw/>
 - model picker changelog: <https://github.blog/changelog/2026-04-14-model-selection-for-claude-and-codex-agents-on-github-com/>
+
