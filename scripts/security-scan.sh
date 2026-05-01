@@ -8,7 +8,7 @@
 #   --history      gitleaks: 全 git history
 #   --trivy        Trivy: fs scan（vuln + misconfig、HIGH/CRITICAL）
 #   --shellcheck   shellcheck: *.sh + shebang 検出 shell ファイル（warning level）
-#   --semgrep      semgrep: p/shell + p/secrets（shell security policy）
+#   --semgrep      semgrep: r/bash + p/secrets（bash security + secret pattern）
 #   --all          gitleaks(--full) + Trivy + shellcheck + semgrep
 #
 # ツール未インストール時:
@@ -77,15 +77,15 @@ _list_shell_files_z() {
 run_semgrep() {
   # docker フォールバック: semgrep CLI 未インストールでも docker があれば走らせる
   if command -v semgrep >/dev/null 2>&1; then
-    echo "[security-scan] semgrep: p/shell + p/secrets (shell security policy)"
-    semgrep scan --config p/shell --config p/secrets \
+    echo "[security-scan] semgrep: r/bash + p/secrets (bash security + secret pattern)"
+    semgrep scan --config r/bash --config p/secrets \
       --error --severity=WARNING --severity=ERROR --metrics=off
     return
   fi
   if command -v docker >/dev/null 2>&1; then
-    echo "[security-scan] semgrep (docker): p/shell + p/secrets"
+    echo "[security-scan] semgrep (docker): r/bash + p/secrets"
     docker run --rm -v "$(pwd):/src" -w /src semgrep/semgrep:1.161.0 \
-      semgrep scan --config p/shell --config p/secrets \
+      semgrep scan --config r/bash --config p/secrets \
       --error --severity=WARNING --severity=ERROR --metrics=off
     return
   fi
