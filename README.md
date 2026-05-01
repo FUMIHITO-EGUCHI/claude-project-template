@@ -16,18 +16,18 @@ Claude Code と Codex を 1 人開発で併用すると、こういうことが�
 
 ```mermaid
 flowchart TD
-    A[Issue 作成] --> B[claude-issue-triage.yml<br/>model: / type: / area: 自動付与]
-    B --> C[着手<br/>status: in-progress]
-    C --> D1[調査・設計<br/>@claude mention → Claude Code]
-    C --> D2[実装<br/>Codex / Claude Code]
-    D1 --> E[PR 作成<br/>status: review-pending]
+    A["Issue 作成"] --> B["claude-issue-triage.yml<br/>model: / type: / area: 自動付与"]
+    B --> C["着手 (status: in-progress)"]
+    C --> D1["調査・設計<br/>@claude mention → Claude Code"]
+    C --> D2["実装<br/>Codex / Claude Code"]
+    D1 --> E["PR 作成 (status: review-pending)"]
     D2 --> E
-    E --> F[claude-pr-review.yml<br/>5 軸レビュー + Learning notes]
-    E --> G[CI: typecheck / build]
-    F --> H[Evidence 提出<br/>status: evidence-required]
+    E --> F["claude-pr-review.yml<br/>5 軸レビュー + Learning notes"]
+    E --> G["CI: typecheck / build"]
+    F --> H["Evidence 提出 (status: evidence-required)"]
     G --> H
-    H --> I{Human 確認<br/>Evidence のみ参照}
-    I -->|OK| J[status: accepted<br/>→ close 人間のみ]
+    H --> I{"Human 確認<br/>Evidence のみ参照"}
+    I -->|OK| J["status: accepted<br/>→ close (人間のみ)"]
     I -->|NG| C
 ```
 
