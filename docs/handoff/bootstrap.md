@@ -29,8 +29,12 @@ sh scripts/init-project.sh "<new-pj>" "短い説明"
 `init-project.sh` がやること:
 
 1. `CLAUDE.md` / `AGENTS.md` / `README.md` / `package.json` のプレースホルダ置換
-2. `commit-msg` / `pre-commit` hook をインストール
+2. `commit-msg` / `pre-commit` hook をインストール（pre-commit は staged 差分の secret scan 込み、`gitleaks` 未インストールでも commit はブロックしない）
 3. `.github/labels.yml` を GitHub に同期（`status:` 7種 + `model:` 3種 + `cost: overrun` 等）
+
+### Security CI（自動）
+
+`.github/workflows/security.yml`（gitleaks）と `.github/dependabot.yml`（npm + github-actions weekly）がデフォルト有効。public 化前は [`docs/security/public-release-checklist.md`](../security/public-release-checklist.md) を必ず通す。
 
 ---
 

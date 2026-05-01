@@ -52,9 +52,12 @@ flowchart TD
 | `.github/workflows/claude-issue-triage.yml` | Issue 作成時に model: / type: / area: を自動付与 |
 | `.github/workflows/claude-mention.yml` | @claude メンションで応答（質問 / 調査 / 実装、track_progress 付き） |
 | `.github/workflows/claude-pr-review.yml` | PR 作成時に 5 軸レビュー + Learning notes |
+| `.github/workflows/security.yml` | gitleaks による secret scan（push / PR） |
+| `.github/dependabot.yml` | npm / github-actions の weekly 更新 |
 | `docs/handoff/` | GitHub Issues ベース handoff 運用ガイド + AI 実行制御 |
 | `docs/decisions/` | ADR ひな形 + 参考 ADR（Issue SoT / Human acceptance / Learning loop） |
-| `scripts/` | init-project.sh / commit-msg hook（`#<issue>` 強制）/ sync-labels |
+| `docs/security/public-release-checklist.md` | private→public 化前のセキュリティ確認手順 |
+| `scripts/` | init-project.sh / commit-msg hook（`#<issue>` 強制）/ sync-labels / security-scan.sh |
 
 ---
 

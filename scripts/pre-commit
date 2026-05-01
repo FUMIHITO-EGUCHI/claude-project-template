@@ -2,11 +2,25 @@
 # pre-commit hook
 # install with: sh scripts/setup-hooks.sh
 
-npm run precommit:check
-
-if [ $? -ne 0 ]; then
+# 1. secret scan (staged diff)
+#    gitleaks 未インストールでも commit はブロックしない（warn のみ）
+sh scripts/security-scan.sh --staged
+rc=$?
+if [ $rc -eq 1 ]; then
   echo ""
-  echo "Pre-commit checks failed."
-  echo "  Fix typecheck errors (or whatever precommit:check runs) and commit again."
+  echo "Pre-commit: secrets detected in staged changes."
+  echo "  Remove the secret, then commit again."
+  echo "  If accidentally committed earlier, ROTATE the secret (do not just delete)."
   exit 1
+fi
+
+# 2. project-specific check（Node なら typecheck 等、未設定なら no-op）
+if [ -f package.json ] && command -v npm >/dev/null 2>&1; then
+  npm run precommit:check
+  if [ $? -ne 0 ]; then
+    echo ""
+    echo "Pre-commit checks failed."
+    echo "  Fix the errors and commit again."
+    exit 1
+  fi
 fi
