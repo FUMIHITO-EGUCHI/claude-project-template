@@ -43,3 +43,24 @@ jobs:
       - uses: ludeeus/action-shellcheck@00cae500b08a931fb5698e11e79bfbd38e612a38  # 2.0.0
         with:
           severity: warning
+
+  semgrep:
+    name: semgrep (shell security policy)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - run: pip install --no-cache-dir semgrep==1.161.0
+      # p/shell: eval / curl|sh / chmod 777 等の shell security pattern
+      # p/secrets: hardcoded credential pattern (gitleaks の取りこぼし補完)
+      # WARNING 以上で fail。INFO はノイズ抑制で抜く
+      - run: |
+          semgrep scan \
+            --config p/shell \
+            --config p/secrets \
+            --error \
+            --severity=WARNING \
+            --severity=ERROR \
+            --metrics=off

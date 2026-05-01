@@ -8,7 +8,8 @@
 #   --history      gitleaks: 全 git history
 #   --trivy        Trivy: fs scan（vuln + misconfig、HIGH/CRITICAL）
 #   --shellcheck   shellcheck: *.sh + shebang 検出 shell ファイル（warning level）
-#   --all          gitleaks(--full) + Trivy + shellcheck
+#   --semgrep      semgrep: p/shell + p/secrets（shell security policy）
+#   --all          gitleaks(--full) + Trivy + shellcheck + semgrep
 #
 # ツール未インストール時:
 #   --staged + gitleaks 欠落 → warn + exit 0（commit ブロックしない）
@@ -73,6 +74,29 @@ _list_shell_files_z() {
   } | sort -zu
 }
 
+run_semgrep() {
+  # docker フォールバック: semgrep CLI 未インストールでも docker があれば走らせる
+  if command -v semgrep >/dev/null 2>&1; then
+    echo "[security-scan] semgrep: p/shell + p/secrets (shell security policy)"
+    semgrep scan --config p/shell --config p/secrets \
+      --error --severity=WARNING --severity=ERROR --metrics=off
+    return $?
+  fi
+  if command -v docker >/dev/null 2>&1; then
+    echo "[security-scan] semgrep (docker): p/shell + p/secrets"
+    docker run --rm -v "$(pwd):/src" -w /src semgrep/semgrep:1.161.0 \
+      semgrep scan --config p/shell --config p/secrets \
+      --error --severity=WARNING --severity=ERROR --metrics=off
+    return $?
+  fi
+  echo "[security-scan] semgrep / docker neither installed." >&2
+  echo "[security-scan]   Install: https://semgrep.dev/docs/getting-started" >&2
+  if [ "${CI:-false}" = "true" ]; then
+    return 1
+  fi
+  return 2
+}
+
 run_shellcheck() {
   require_tool shellcheck https://github.com/koalaman/shellcheck#installing || return $?
   echo "[security-scan] shellcheck: *.sh + shebang-detected shell files (warning level)"
@@ -87,11 +111,12 @@ case "$MODE" in
   --history)    run_gitleaks_git ;;
   --trivy)      run_trivy ;;
   --shellcheck) run_shellcheck ;;
+  --semgrep)    run_semgrep ;;
   --all)
     # last-wins だと issue 検出(1) が tool 欠落(2) で隠れるため、両者を別管理する
     found_issues=0
     missing_tools=0
-    for fn in run_gitleaks_dir run_trivy run_shellcheck; do
+    for fn in run_gitleaks_dir run_trivy run_shellcheck run_semgrep; do
       if "$fn"; then
         :
       else
@@ -111,7 +136,7 @@ case "$MODE" in
     ;;
   *)
     echo "[security-scan] unknown mode: $MODE" >&2
-    echo "Usage: $0 [--staged | --full | --history | --trivy | --shellcheck | --all]" >&2
+    echo "Usage: $0 [--staged | --full | --history | --trivy | --shellcheck | --semgrep | --all]" >&2
     exit 2
     ;;
 esac
