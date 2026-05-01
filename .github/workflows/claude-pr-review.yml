@@ -62,5 +62,15 @@ jobs:
             - 「言語の文法は分かるが、ライブラリと PJ 固有のパターンは初見」レベルを想定
             - 公式ドキュメントへのリンクが提供できない概念は出さない（hallucination 抑制）
             - 概念が見当たらないなら「今回は新規概念なし」と1行書いて終わる。無理に3つ捻り出さない
+
+            ## 必須出力: verdict marker（rework auto-counter 用）
+
+            レビューコメントの **最終行** に必ず以下の HTML コメントを **1個だけ** 含める。rework-tracker.yml が grep して rework count を自動付与する。
+
+            - 全軸 ✅ で修正不要なら: `<!-- ai-review-verdict: approved -->`
+            - cosmetic / コメント文言 / 命名 など軽微指摘のみ（merge を妨げない）: `<!-- ai-review-verdict: changes-requested-minor -->`
+            - correctness / security / architecture / performance に踏み込む実質的指摘あり: `<!-- ai-review-verdict: changes-requested-major -->`
+
+            判定基準: 「指摘を反映しないと merge すべきでないか」を yes/no で判断。yes なら major、no で改善余地のみなら minor、指摘なしなら approved。
           claude_args: |
             --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr:*),Bash(git diff:*),Bash(git log:*),Bash(git show:*)"

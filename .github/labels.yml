@@ -80,6 +80,17 @@
   color: "5319e7"
   description: "完了時の振り返り：strong を使ったが standard で足りた"
 
+# --- rework (AI review feedback による手戻り回数。rework-tracker.yml が自動付与) ---
+- name: "rework: 1"
+  color: "fbca04"
+  description: "AI review で changes-requested-major を1回受けた"
+- name: "rework: 2"
+  color: "d93f0b"
+  description: "AI review で changes-requested-major を2回受けた"
+- name: "rework: 3+"
+  color: "b60205"
+  description: "AI review で changes-requested-major を3回以上受けた（仕様再考の合図）"
+
 # --- area (プロジェクトごとに追加・削除する) ---
 - name: "area: handoff"
   color: "bfd4f2"

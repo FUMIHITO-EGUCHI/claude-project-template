@@ -51,7 +51,8 @@ flowchart TD
 | `.github/labels.yml` + sync workflow | 6 軸ラベル（status / model / owner / priority / type / area）を GitHub に自動同期 |
 | `.github/workflows/claude-issue-triage.yml` | Issue 作成時に model: / type: / area: を自動付与 |
 | `.github/workflows/claude-mention.yml` | @claude メンションで応答（質問 / 調査 / 実装、track_progress 付き） |
-| `.github/workflows/claude-pr-review.yml` | PR 作成時に 5 軸レビュー + Learning notes |
+| `.github/workflows/claude-pr-review.yml` | PR 作成時に 5 軸レビュー + Learning notes + verdict marker |
+| `.github/workflows/rework-tracker.yml` | AI review の `changes-requested-major` を検知して `rework: N` を自動加算 |
 | `.github/workflows/security.yml` | gitleaks による secret scan（push / PR） |
 | `.github/dependabot.yml` | npm / github-actions の weekly 更新 |
 | `docs/handoff/` | GitHub Issues ベース handoff 運用ガイド + AI 実行制御 |
@@ -114,6 +115,7 @@ grep -rn '@stack:replace' .
 |---|---|
 | `cost: overrun` | 想定より燃えた |
 | `model: was-overkill` | strong を使ったが standard で足りた |
+| `rework: 1` / `rework: 2` / `rework: 3+` | AI review NG 回数。`rework-tracker.yml` が自動付与（minor 指摘ではカウントされない） |
 
 ### その他
 

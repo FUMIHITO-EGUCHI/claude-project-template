@@ -106,11 +106,12 @@ blank issue は無効化している。
 <`git diff --name-only <base>..HEAD` の結果>
 
 ## Rework count
-rework: 0  # 自分が evidence を貼り直した回数。rejected → 修正 → 再 evidence で +1
+<!-- ラベル `rework: N` で機械的に集計（rework-tracker.yml が自動付与）。
+     必要なら理由を1行追記: 例) `rework: 2 (gitleaks-action SHA 未固定 / dependabot major bump 未制限)` -->
 ```
 
 4. **AI は close しない**。`status: evidence-required` で人間の確認待ちに入る
-5. **人間の操作**: evidence を見て OK なら `status: evidence-required` を外し `status: accepted` を付け close。NG なら理由をコメントし `status: in-progress` に戻す（rework count +1）
+5. **人間の操作**: evidence を見て OK なら `status: evidence-required` を外し `status: accepted` を付け close。NG なら理由をコメントし `status: in-progress` に戻す（rework count は label で自動加算 — 別途 reason を1行残すと月次振り返りで使える）
 
 ### 3.3-legacy 旧フロー（ready-for-close）
 

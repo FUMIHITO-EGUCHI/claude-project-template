@@ -1,0 +1,74 @@
+name: Rework tracker
+
+# claude-pr-review.yml が PR コメントに残す verdict marker を読み、
+# changes-requested-major のときだけ PR と紐付く Issue の rework: N ラベルを increment する。
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  pull-requests: write
+  issues: write
+
+jobs:
+  track:
+    if: |
+      github.event.issue.pull_request != null &&
+      contains(github.event.comment.body, 'ai-review-verdict: changes-requested-major')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const REWORK_LABELS = ['rework: 1', 'rework: 2', 'rework: 3+'];
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const prNumber = context.payload.issue.number;
+
+            async function bump(issueNumber) {
+              const { data: issue } = await github.rest.issues.get({ owner, repo, issue_number: issueNumber });
+              const labels = issue.labels.map(l => typeof l === 'string' ? l : l.name);
+
+              let currentIdx = -1;
+              for (let i = 0; i < REWORK_LABELS.length; i++) {
+                if (labels.includes(REWORK_LABELS[i])) currentIdx = i;
+              }
+              const nextIdx = Math.min(currentIdx + 1, REWORK_LABELS.length - 1);
+              const nextLabel = REWORK_LABELS[nextIdx];
+
+              if (currentIdx === REWORK_LABELS.length - 1 && labels.includes(nextLabel)) {
+                core.info(`#${issueNumber}: already at ${nextLabel}, no-op`);
+                return nextLabel;
+              }
+
+              for (const l of REWORK_LABELS) {
+                if (labels.includes(l) && l !== nextLabel) {
+                  await github.rest.issues.removeLabel({ owner, repo, issue_number: issueNumber, name: l }).catch(() => {});
+                }
+              }
+              await github.rest.issues.addLabels({ owner, repo, issue_number: issueNumber, labels: [nextLabel] });
+              return nextLabel;
+            }
+
+            const prLabel = await bump(prNumber);
+
+            const { data: pr } = await github.rest.pulls.get({ owner, repo, pull_number: prNumber });
+            const body = pr.body || '';
+            const linkedIssues = new Set();
+            for (const m of body.matchAll(/(?:closes|fixes|resolves|refs)\s+#(\d+)/gi)) {
+              const n = parseInt(m[1], 10);
+              if (n !== prNumber) linkedIssues.add(n);
+            }
+            for (const n of linkedIssues) {
+              await bump(n).catch(err => core.warning(`failed to bump #${n}: ${err.message}`));
+            }
+
+            const stamp = new Date().toISOString().replace('T', ' ').slice(0, 16);
+            const linkedNote = linkedIssues.size
+              ? ` Linked Issues also bumped: ${[...linkedIssues].map(n => '#' + n).join(', ')}.`
+              : '';
+            await github.rest.issues.createComment({
+              owner, repo, issue_number: prNumber,
+              body: `🔁 rework auto-incremented to **${prLabel}** by ai-review at ${stamp} UTC.${linkedNote}\n\n_管理: [.github/workflows/rework-tracker.yml](.github/workflows/rework-tracker.yml) — minor 指摘ではカウントされない_`,
+            });
