@@ -6,7 +6,7 @@
 #    gitleaks 未インストールでも commit はブロックしない（warn のみ）
 sh scripts/security-scan.sh --staged
 rc=$?
-if [ $rc -eq 1 ]; then
+if [ "$rc" -eq 1 ]; then
   echo ""
   echo "Pre-commit: secrets detected in staged changes."
   echo "  Remove the secret, then commit again."
@@ -16,8 +16,7 @@ fi
 
 # 2. project-specific check（Node なら typecheck 等、未設定なら no-op）
 if [ -f package.json ] && command -v npm >/dev/null 2>&1; then
-  npm run precommit:check
-  if [ $? -ne 0 ]; then
+  if ! npm run precommit:check; then
     echo ""
     echo "Pre-commit checks failed."
     echo "  Fix the errors and commit again."

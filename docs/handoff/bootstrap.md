@@ -34,7 +34,9 @@ sh scripts/init-project.sh "<new-pj>" "短い説明"
 
 ### Security CI（自動）
 
-`.github/workflows/security.yml`（gitleaks）と `.github/dependabot.yml`（npm + github-actions weekly）がデフォルト有効。public 化前は [`docs/security/public-release-checklist.md`](../security/public-release-checklist.md) を必ず通す。
+`.github/workflows/security.yml` で **gitleaks**（secret）/ **Trivy**（dep vuln + IaC misconfig、HIGH/CRITICAL のみ）/ **shellcheck**（shell lint、warning level）を並列実行。`.github/dependabot.yml`（npm + github-actions weekly）も併走。
+
+ローカルで同等 scan するには `sh scripts/security-scan.sh --all`（各ツール個別実行は `--trivy` / `--shellcheck` 等）。public 化前は [`docs/security/public-release-checklist.md`](../security/public-release-checklist.md) を必ず通す。
 
 ---
 
