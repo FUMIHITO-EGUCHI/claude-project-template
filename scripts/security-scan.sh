@@ -80,14 +80,14 @@ run_semgrep() {
     echo "[security-scan] semgrep: p/shell + p/secrets (shell security policy)"
     semgrep scan --config p/shell --config p/secrets \
       --error --severity=WARNING --severity=ERROR --metrics=off
-    return $?
+    return
   fi
   if command -v docker >/dev/null 2>&1; then
     echo "[security-scan] semgrep (docker): p/shell + p/secrets"
     docker run --rm -v "$(pwd):/src" -w /src semgrep/semgrep:1.161.0 \
       semgrep scan --config p/shell --config p/secrets \
       --error --severity=WARNING --severity=ERROR --metrics=off
-    return $?
+    return
   fi
   echo "[security-scan] semgrep / docker neither installed." >&2
   echo "[security-scan]   Install: https://semgrep.dev/docs/getting-started" >&2
