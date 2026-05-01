@@ -33,9 +33,10 @@ jobs:
           severity: HIGH,CRITICAL
           exit-code: "1"
           ignore-unfixed: true
+          cache: true
 
   shellcheck:
-    name: shellcheck (*.sh)
+    name: shellcheck (shell scripts)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # security-scan.sh
-# Local security scan wrapper. CI と同じ検出器をローカルで回せる。
+# ローカル security scan ラッパー。CI と同じ検出器をローカルで回せる。
 #
 # モード:
 #   --staged       gitleaks: staged diff のみ（pre-commit 用）
@@ -59,25 +59,29 @@ run_trivy() {
   trivy fs --scanners vuln,misconfig --severity HIGH,CRITICAL --exit-code 1 --ignore-unfixed .
 }
 
+_list_shell_files_z() {
+  # NUL-separated to handle spaces / unusual chars in filenames
+  {
+    find . -type f -name '*.sh' \
+      -not -path './.git/*' \
+      -not -path './node_modules/*' \
+      -not -path './.github/*' -print0 2>/dev/null
+    grep -rlZE '^#!\s*(/bin/|/usr/bin/env[[:space:]]+)((ba|da|k|z)?sh)' . \
+      --exclude-dir=.git \
+      --exclude-dir=node_modules \
+      --exclude-dir=.github 2>/dev/null || true
+  } | sort -zu
+}
+
 run_shellcheck() {
   require_tool shellcheck https://github.com/koalaman/shellcheck#installing || return $?
   echo "[security-scan] shellcheck: *.sh + shebang-detected shell files (warning level)"
-  files=$(
-    {
-      find . -type f -name '*.sh' \
-        -not -path './.git/*' \
-        -not -path './node_modules/*' 2>/dev/null
-      grep -rlE '^#!\s*(/bin/|/usr/bin/env[[:space:]]+)((ba|da|k|z)?sh)' . \
-        --exclude-dir=.git \
-        --exclude-dir=node_modules \
-        --exclude-dir=.github 2>/dev/null || true
-    } | sort -u
-  )
-  if [ -z "$files" ]; then
+  list=$(_list_shell_files_z)
+  if [ -z "$list" ]; then
     echo "[security-scan]   no shell files found"
     return 0
   fi
-  echo "$files" | xargs shellcheck -S warning
+  printf '%s' "$list" | xargs -0 shellcheck -S warning
 }
 
 case "$MODE" in
@@ -87,11 +91,26 @@ case "$MODE" in
   --trivy)      run_trivy ;;
   --shellcheck) run_shellcheck ;;
   --all)
-    rc=0
-    run_gitleaks_dir || rc=$?
-    run_trivy        || rc=$?
-    run_shellcheck   || rc=$?
-    exit "$rc"
+    # last-wins だと issue 検出(1) が tool 欠落(2) で隠れるため、両者を別管理する
+    found_issues=0
+    missing_tools=0
+    for fn in run_gitleaks_dir run_trivy run_shellcheck; do
+      if "$fn"; then
+        :
+      else
+        case $? in
+          1) found_issues=1 ;;
+          2) missing_tools=1 ;;
+          *) found_issues=1 ;;
+        esac
+      fi
+    done
+    if [ "$found_issues" = "1" ]; then
+      exit 1
+    elif [ "$missing_tools" = "1" ]; then
+      exit 2
+    fi
+    exit 0
     ;;
   *)
     echo "[security-scan] unknown mode: $MODE" >&2
