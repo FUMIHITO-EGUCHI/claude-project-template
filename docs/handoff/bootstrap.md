@@ -38,6 +38,8 @@ sh scripts/init-project.sh "<new-pj>" "短い説明"
 
 ローカルで同等 scan するには `sh scripts/security-scan.sh --all`（各ツール個別実行は `--trivy` / `--shellcheck` / `--semgrep` 等）。public 化前は [`docs/security/public-release-checklist.md`](../security/public-release-checklist.md) を必ず通す。
 
+CodeQL は **opt-in 雛形**として `.github/workflows/codeql.yml.example` に同梱。重い言語解析が必要な PJ のみリネームして有効化する（手順は public-release-checklist §8）。
+
 ---
 
 ## 2. GitHub App 連携（claude-code-action 必須）

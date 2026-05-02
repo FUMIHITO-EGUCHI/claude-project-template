@@ -116,3 +116,18 @@ git ls-files | grep -E '\.(env|pem|key|har)$|credentials|secret'
 - [ ] security workflow（gitleaks / Trivy / shellcheck / semgrep）が PR 毎に走っていること（[`.github/workflows/security.yml`](../../.github/workflows/security.yml)）
 - [ ] dependabot PR が来たらマージ運用
 - [ ] Issue / PR の不審な活動（大量 spam、bot 攻撃）を週次で確認
+
+---
+
+## 8. CodeQL（opt-in）
+
+`.github/workflows/codeql.yml.example` は **デフォルト無効**の雛形。Node のみの PJ では Trivy + semgrep で十分なケースが多い。重い解析（数分〜十数分）が必要な場面で opt-in する。
+
+有効化手順:
+
+1. `.github/workflows/codeql.yml.example` → `codeql.yml` にリネーム
+2. `matrix.language:` をスタックに合わせて編集（cpp / csharp / go / java-kotlin / javascript-typescript / python / ruby / swift）
+3. リポジトリ Settings → Code security → Code scanning が enabled になっていることを確認
+4. push / PR / weekly cron で自動実行される。結果は Security タブで確認
+
+参考: [GitHub Docs — Configuring code scanning](https://docs.github.com/en/code-security/code-scanning/automatically-scanning-your-code-for-vulnerabilities-and-errors/configuring-code-scanning)

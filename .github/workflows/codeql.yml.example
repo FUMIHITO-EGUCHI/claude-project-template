@@ -1,0 +1,63 @@
+# CodeQL — opt-in template
+#
+# このファイルは拡張子 .example のため GitHub Actions では実行されない。
+# 有効化手順:
+#   1. ファイル名を `codeql.yml.example` → `codeql.yml` に変更
+#   2. languages: 配列を実際のスタックに合わせて編集（下記コメント参照）
+#   3. commit + push で main / PR で自動実行される
+#
+# CodeQL は重い解析（数分〜十数分）。テンプレ展開先のスタックや CI 予算で
+# 必要性を判断すること。Node のみのプロジェクトでは Trivy + semgrep で十分な
+# ケースが多い。
+#
+# 参考:
+#   - https://docs.github.com/en/code-security/code-scanning/automatically-scanning-your-code-for-vulnerabilities-and-errors/configuring-code-scanning
+#   - https://github.com/github/codeql-action
+
+name: CodeQL
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # weekly full scan（push trigger だけだと差分依存で漏れることがある）
+    - cron: '17 3 * * 1'
+
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
+jobs:
+  analyze:
+    name: CodeQL (${{ matrix.language }})
+    runs-on: ubuntu-latest
+    # GitHub デフォルトの 6h タイムアウトに任せると、DB 取得失敗等でハングした
+    # 際に Actions ミニッツを大量浪費する。JS/TS で通常 5〜15 分なので 30 分で打ち切る。
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        # 実際のスタックに合わせて編集する。
+        # 対応 language: cpp, csharp, go, java-kotlin, javascript-typescript,
+        #               python, ruby, swift
+        language: [javascript-typescript]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@0daab03d71ff584ef619d027a3fd9146679c5d84  # v3.35.3
+        with:
+          languages: ${{ matrix.language }}
+          # security-extended は誤検知が多いので security-and-quality を default に
+          queries: security-and-quality
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@0daab03d71ff584ef619d027a3fd9146679c5d84  # v3.35.3
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@0daab03d71ff584ef619d027a3fd9146679c5d84  # v3.35.3
+        with:
+          category: '/language:${{ matrix.language }}'
