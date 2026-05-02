@@ -23,8 +23,10 @@ flowchart TD
     D1 --> E["PR 作成 (status: review-pending)"]
     D2 --> E
     E --> F["claude-pr-review.yml<br/>5 軸レビュー + Learning notes"]
-    E --> G["CI: typecheck / build"]
-    F --> H["Evidence 提出 (status: evidence-required)"]
+    E --> G["security.yml<br/>gitleaks / Trivy / shellcheck / semgrep<br/>+ CI: typecheck / build"]
+    F -->|changes-requested-major| R["rework-tracker.yml<br/>rework: N 自動加算"]
+    R --> C
+    F -->|approved / minor| H["Evidence 提出 (status: evidence-required)"]
     G --> H
     H --> I{"Human 確認<br/>Evidence のみ参照"}
     I -->|OK| J["status: accepted<br/>→ close (人間のみ)"]
