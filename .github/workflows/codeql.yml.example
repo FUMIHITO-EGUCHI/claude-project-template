@@ -34,6 +34,9 @@ jobs:
   analyze:
     name: CodeQL (${{ matrix.language }})
     runs-on: ubuntu-latest
+    # GitHub デフォルトの 6h タイムアウトに任せると、DB 取得失敗等でハングした
+    # 際に Actions ミニッツを大量浪費する。JS/TS で通常 5〜15 分なので 30 分で打ち切る。
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
