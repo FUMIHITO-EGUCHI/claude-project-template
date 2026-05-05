@@ -15,10 +15,30 @@ permissions:
   id-token: write
 
 jobs:
+  check-secrets:
+    runs-on: ubuntu-latest
+    outputs:
+      has_token: ${{ steps.check.outputs.has_token }}
+    steps:
+      - id: check
+        env:
+          T: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+        run: |
+          if [ -n "$T" ]; then
+            echo "has_token=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_token=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::CLAUDE_CODE_OAUTH_TOKEN is not configured for this repository — skipping @claude responder. Set the secret to enable."
+          fi
+
   respond:
+    needs: check-secrets
     if: |
-      (github.event.comment != null && contains(github.event.comment.body, '@claude')) ||
-      (github.event.action == 'assigned' && github.event.assignee.login == 'claude')
+      needs.check-secrets.outputs.has_token == 'true' &&
+      (
+        (github.event.comment != null && contains(github.event.comment.body, '@claude')) ||
+        (github.event.action == 'assigned' && github.event.assignee.login == 'claude')
+      )
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
