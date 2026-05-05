@@ -20,6 +20,7 @@ jobs:
       (github.event.comment != null && contains(github.event.comment.body, '@claude')) ||
       (github.event.action == 'assigned' && github.event.assignee.login == 'claude')
     runs-on: ubuntu-latest
+    environment: claude  # CLAUDE_CODE_OAUTH_TOKEN は env: claude に格納
     steps:
       - uses: actions/checkout@v4
 

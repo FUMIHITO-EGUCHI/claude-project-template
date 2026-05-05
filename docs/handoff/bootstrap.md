@@ -56,6 +56,19 @@ CodeQL は **opt-in 雛形**として `.github/workflows/codeql.yml.example` に
 - GitHub App が当該リポに install される
 - リポジトリ Secret に `CLAUDE_CODE_OAUTH_TOKEN` が自動登録される
 
+### Environment secret 化（推奨）
+
+template の workflow は `environment: claude` を指定しており、`CLAUDE_CODE_OAUTH_TOKEN` を Environment secret として参照する。`/install-github-app` の自動登録は repository secret なので、手動で env に移す:
+
+1. GitHub UI で `Settings → Environments → New environment` → 名前 `claude`
+2. Protection rules は付けない（branch 制限・approval を入れると bot/PR トリガーで自動レビューが止まる）
+3. `Environment secrets` で `CLAUDE_CODE_OAUTH_TOKEN` を追加（値は repo-level secret から copy）
+4. 動作確認後、repo-level の `CLAUDE_CODE_OAUTH_TOKEN` を削除
+
+集約のメリット:
+- 将来 `ANTHROPIC_API_KEY` 等を追加する時に Claude 関連 secret を1箇所にまとめられる
+- env 単位で閲覧/編集権限を分離できる
+
 ### 注意: 自動生成される workflow を削除
 
 `/install-github-app` は副作用として **`.github/workflows/claude-code-review.yml` を勝手に作る**（汎用 PR レビュー workflow）。本テンプレの `claude-pr-review.yml` と機能が重複するため削除する:

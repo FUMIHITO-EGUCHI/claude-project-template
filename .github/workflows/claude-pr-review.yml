@@ -13,6 +13,7 @@ jobs:
   review:
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
+    environment: claude  # CLAUDE_CODE_OAUTH_TOKEN は env: claude に格納
     steps:
       - uses: actions/checkout@v4
         with:
