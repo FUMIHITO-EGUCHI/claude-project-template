@@ -10,7 +10,25 @@ permissions:
   id-token: write
 
 jobs:
+  check-secrets:
+    runs-on: ubuntu-latest
+    outputs:
+      has_token: ${{ steps.check.outputs.has_token }}
+    steps:
+      - id: check
+        env:
+          T: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+        run: |
+          if [ -n "$T" ]; then
+            echo "has_token=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_token=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::CLAUDE_CODE_OAUTH_TOKEN is not configured for this repository — skipping issue triage. Set the secret to enable."
+          fi
+
   triage:
+    needs: check-secrets
+    if: needs.check-secrets.outputs.has_token == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
