@@ -13,6 +13,7 @@ permissions:
   issues: write
   pull-requests: write
   id-token: write
+  actions: read  # claude-code-action queries GET /repos/:o/:r/actions/runs to attach job links
 
 jobs:
   check-secrets:
