@@ -1,7 +1,15 @@
 name: Rework tracker
 
-# claude-pr-review.yml が PR コメントに残す verdict marker を読み、
+# claude-pr-review.yml / codex-pr-review.yml が PR コメントに残す verdict marker を読み、
 # changes-requested-major のときだけ PR と紐付く Issue の rework: N ラベルを increment する。
+#
+# 対応 marker:
+#   - <!-- ai-review-verdict: changes-requested-major -->          (claude)
+#   - <!-- ai-review-verdict-codex: changes-requested-major -->    (codex)
+#
+# claude と codex が両方 major を出した場合は別ソースとして 2 回 increment する
+# （異なる視点の指摘は別カウントが妥当）。同 source の重複は 1 PR で 1 increment のみ
+# になるよう、bump 内で `currentIdx === REWORK_LABELS.length - 1` 飽和をチェックする。
 
 on:
   issue_comment:
@@ -15,7 +23,10 @@ jobs:
   track:
     if: |
       github.event.issue.pull_request != null &&
-      contains(github.event.comment.body, 'ai-review-verdict: changes-requested-major')
+      (
+        contains(github.event.comment.body, 'ai-review-verdict: changes-requested-major') ||
+        contains(github.event.comment.body, 'ai-review-verdict-codex: changes-requested-major')
+      )
     runs-on: ubuntu-latest
     steps:
       - uses: actions/github-script@v7
@@ -25,6 +36,11 @@ jobs:
             const owner = context.repo.owner;
             const repo = context.repo.repo;
             const prNumber = context.payload.issue.number;
+            // どの review source の major で発火したか（コメント本文から検出）
+            const body = context.payload.comment.body || '';
+            const source = /ai-review-verdict-codex:\s*changes-requested-major/.test(body)
+              ? 'codex'
+              : 'claude';
 
             async function bump(issueNumber) {
               const { data: issue } = await github.rest.issues.get({ owner, repo, issue_number: issueNumber });
@@ -70,5 +86,5 @@ jobs:
               : '';
             await github.rest.issues.createComment({
               owner, repo, issue_number: prNumber,
-              body: `🔁 rework auto-incremented to **${prLabel}** by ai-review at ${stamp} UTC.${linkedNote}\n\n_管理: [.github/workflows/rework-tracker.yml](.github/workflows/rework-tracker.yml) — minor 指摘ではカウントされない_`,
+              body: `🔁 rework auto-incremented to **${prLabel}** by ${source} ai-review at ${stamp} UTC.${linkedNote}\n\n_管理: [.github/workflows/rework-tracker.yml](.github/workflows/rework-tracker.yml) — minor 指摘ではカウントされない_`,
             });

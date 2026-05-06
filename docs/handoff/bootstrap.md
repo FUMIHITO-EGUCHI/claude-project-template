@@ -69,6 +69,18 @@ template の workflow は `environment: claude` を指定しており、`CLAUDE_
 - 将来 `ANTHROPIC_API_KEY` 等を追加する時に Claude 関連 secret を1箇所にまとめられる
 - env 単位で閲覧/編集権限を分離できる
 
+### Codex review を有効化する（任意）
+
+claude-pr-review.yml の代替 / second opinion として `codex-pr-review.yml` も導入されている。`openai/codex-action@v1` を使い、`OPENAI_API_KEY` を Environment secret として参照する。
+
+1. <https://platform.openai.com/api-keys> で API key 発行（Project key 推奨）
+2. GitHub UI で `Settings → Environments → New environment` → 名前 `codex`
+3. Protection rules は付けない
+4. `Environment secrets` で `OPENAI_API_KEY` を追加
+5. 起動: PR に `review: codex` ラベルを貼ると codex-pr-review.yml が走る
+
+`pr-auto-label.yml` が PR open 時に default で `review: claude` を貼るので、codex を使う場合は手動で `review: codex` に張替えるか、両方付けて second opinion を取る運用。
+
 ### 注意: 自動生成される workflow を削除
 
 `/install-github-app` は副作用として **`.github/workflows/claude-code-review.yml` を勝手に作る**（汎用 PR レビュー workflow）。本テンプレの `claude-pr-review.yml` と機能が重複するため削除する:
@@ -131,9 +143,22 @@ git push -u origin test/pr-review-smoke
 gh pr create --title "test: pr review smoke" --body "smoke test"
 ```
 
+- `pr-auto-label.yml` が `review: claude` を default 付与
 - `claude-pr-review.yml` が起動
 - 5軸レビューの inline comment + summary
 - **summary 末尾に `## Learning notes for the human` セクションが必ず出る**（ADR-0003）
+
+### 4.4 Codex PR review（OPENAI_API_KEY 設定済みなら）
+
+上記の test PR で、追加で codex review も試す:
+
+```bash
+gh pr edit <pr-number> --add-label "review: codex"
+```
+
+- `codex-pr-review.yml` が起動
+- 5軸レビューコメント（先頭に `[codex]` prefix）+ verdict marker `<!-- ai-review-verdict-codex: ... -->`
+- 両方 label が付いてれば claude / codex 両方走る（second opinion）
 
 確認後、PR は merge せず close。
 

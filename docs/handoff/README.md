@@ -19,6 +19,7 @@
 | `type:` | `feature` / `bug` / `investigation` / `refactor` |
 | `area:` | プロジェクトごとに `.github/labels.yml` で定義 |
 | `model:` | `cheap-ok` / `standard` / `strong-required`（AI 実行制御。詳細は [ai-execution.md](./ai-execution.md)） |
+| `review:` | `claude` / `codex` — PR 単位ラベル。`pr-auto-label.yml` が default で `review: claude` を付与。剥がせば claude review skip、`codex` を付ければ codex review が走る。両方付与で両方走る |
 
 - 「done」は **close 状態**で表現する（`status: done` ラベルは存在しない）
 - close は**人間のみ**が行う
@@ -30,7 +31,7 @@ todo → in-progress → review-pending → evidence-required → accepted → c
                   ↘ blocked ↗
 ```
 
-- `review-pending`: AI 実装完了、PR 作成済み。`claude-pr-review.yml` の review agent 確認中
+- `review-pending`: AI 実装完了、PR 作成済み。AI review agent（`claude-pr-review.yml` または `codex-pr-review.yml`、`review:` ラベルで選択）確認中
 - `evidence-required`: review 通過後、AI が `task.yml` の "Evidence of acceptance" 手順を実機で実行し、結果を Issue に貼った状態。**人間 acceptance 待ち**
 - `accepted`: 人間が evidence を確認し OK と判定。close 待ち
 - `ready-for-close`: ADR-0003 以前の旧フロー互換。新規 Issue は上記6状態フローを使う
@@ -86,7 +87,7 @@ blank issue は無効化している。
 
 ### 3.3 完了申請（AI による）— 6状態フロー（ADR-0003）
 
-1. **PR 作成後**: `status: in-progress` を外し `status: review-pending` を付ける。`claude-pr-review.yml` が起動して 5軸レビューを inline comment する
+1. **PR 作成後**: `status: in-progress` を外し `status: review-pending` を付ける。`pr-auto-label.yml` が default で `review: claude` を貼り `claude-pr-review.yml` が起動。codex review を使う場合は `review: codex` を貼る（両方貼れば両方走り、second opinion になる）
 2. **review 通過後**: `status: review-pending` を外し `status: evidence-required` を付ける。同時に Issue Template の "Evidence of acceptance" 手順を実機で実行し、結果（出力 / スクリーンショット / ログ）を Issue コメントに貼る
 3. **evidence コメントには以下を含む**:
 
@@ -234,7 +235,7 @@ AI が満たす（1〜5）:
 
 1. `npm run typecheck` pass
 2. `npm run build` pass
-3. `status: evidence-required` ラベルが付いている
+3. **AI review 通過**（`claude-pr-review.yml` または `codex-pr-review.yml` のいずれか pass。`review:` ラベルで起動制御）。両方貼って両方 fail なら block
 4. Evidence コメントに `## Result` / `## Verification` / `## Evidence` / `## Changed files` / `## Rework count` が揃っている
 5. commit message に `#<issue>` が含まれている
 

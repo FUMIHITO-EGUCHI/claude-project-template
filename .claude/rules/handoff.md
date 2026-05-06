@@ -26,6 +26,7 @@ paths:
 | `priority:` | `high` / `medium` / `low` |
 | `type:` | `feature` / `bug` / `investigation` / `refactor` |
 | `area:` | `viewer` / `content` / `background` / `db` / `handoff` / `other` |
+| `review:` | `claude` / `codex` — PR 単位ラベル。pr-auto-label.yml が default で `review: claude` を付与。剥がせば claude review skip、`codex` を付ければ codex review が走る。両方付与で両方走る |
 
 - `status: done` は存在しない。完了は **close 状態**で表現
 - **close は人間のみ**。AI は絶対に `gh issue close` しない
@@ -37,7 +38,7 @@ paths:
 2. **進捗**: 意味あるステップごとに Issue コメントを追記（`YYYY-MM-DD <自分>:` で始める）
 3. **ブロック時**: `status: in-progress` を外し `status: blocked` を付け、理由をコメント
 4. **完了申請（ADR-0003 6状態フロー）**:
-   - PR 作成後: `in-progress` → `review-pending`（claude-pr-review.yml が起動）
+   - PR 作成後: `in-progress` → `review-pending`。pr-auto-label.yml が `review: claude` を default 付与し claude-pr-review.yml が起動。codex review を使う場合は `review: codex` を貼る（両方貼れば両方走る）
    - review 通過後: `review-pending` → `evidence-required`。Issue Template の "Evidence of acceptance" 手順を実機で実行し、結果を1コメントに：
      - `## Result`（3〜10 行で要約）
      - `## Verification`（typecheck / build の末尾）
@@ -74,7 +75,7 @@ paths:
 
 1. `npm run typecheck` pass
 2. `npm run build` pass
-3. `claude-pr-review.yml` の review 通過
+3. **AI review 通過（claude-pr-review.yml または codex-pr-review.yml のいずれか pass）**。`review:` ラベルで起動制御。両方貼って両方 fail なら block
 4. `status: evidence-required` 付与 + Result / Verification / Evidence / Changed files / Rework count が揃ったコメント1件
 5. commit message に `#<issue>` 含む
 6. 人間が evidence を確認し `status: accepted` を付ける（AI 対象外）

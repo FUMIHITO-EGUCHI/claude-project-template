@@ -1,0 +1,218 @@
+name: Codex PR review
+
+# claude-pr-review.yml と対称構造で OpenAI Codex に PR レビューを依頼する。
+# 起動条件: PR に `review: codex` ラベルが付いている。
+# pr-auto-label.yml は default で `review: claude` を付けるので、Codex review を使う場合は
+# 人間が手動で `review: codex` を貼る（claude を剥がして Codex のみ、両方付けて並走どちらも可）。
+#
+# Action: openai/codex-action@v1
+#   - OPENAI_API_KEY を env: codex の secret に格納する前提
+#   - safety-strategy は default の drop-sudo を使う（read/write 不要、外部に書かない）
+#   - allow-bot-users で dependabot のみ許可（claude 側 allowed_bots と対称）
+
+on:
+  pull_request:
+    types: [opened, synchronize, ready_for_review, labeled]
+
+permissions:
+  contents: read
+  pull-requests: write
+  id-token: write
+  actions: read
+
+jobs:
+  check-secrets:
+    runs-on: ubuntu-latest
+    outputs:
+      has_token: ${{ steps.check.outputs.has_token }}
+    steps:
+      - id: check
+        env:
+          T: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          if [ -n "$T" ]; then
+            echo "has_token=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_token=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::OPENAI_API_KEY is not configured for environment: codex — skipping Codex review. Set the secret to enable."
+          fi
+
+  review:
+    needs: check-secrets
+    # `review: codex` ラベルが付いてる PR でのみ起動する。
+    if: |
+      needs.check-secrets.outputs.has_token == 'true' &&
+      github.event.pull_request.draft == false &&
+      contains(github.event.pull_request.labels.*.name, 'review: codex')
+    runs-on: ubuntu-latest
+    environment: codex  # OPENAI_API_KEY は env: codex に格納
+    outputs:
+      final_message: ${{ steps.codex_review.outputs.final-message }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          # PR の merge commit を check out（codex-action 公式例に従う）
+          ref: refs/pull/${{ github.event.pull_request.number }}/merge
+
+      - name: Pre-fetch base/head refs for diff analysis
+        env:
+          PR_BASE_REF: ${{ github.event.pull_request.base.ref }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          git fetch --no-tags origin \
+            "$PR_BASE_REF" \
+            "+refs/pull/$PR_NUMBER/head"
+
+      - name: 5-axis review (Codex)
+        id: codex_review
+        uses: openai/codex-action@v1
+        with:
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          # Dependabot 起点 PR を許可。claude 側の allowed_bots と対称。
+          allow-bot-users: "dependabot[bot]"
+          prompt: |
+            REPO: ${{ github.repository }}
+            PR NUMBER: ${{ github.event.pull_request.number }}
+            BASE: ${{ github.event.pull_request.base.ref }}
+            HEAD: ${{ github.event.pull_request.head.ref }}
+            BASE SHA: ${{ github.event.pull_request.base.sha }}
+            HEAD SHA: ${{ github.event.pull_request.head.sha }}
+
+            この PR を 5 軸でレビューする：correctness / readability / architecture / security / performance。CLAUDE.md / AGENTS.md / .claude/rules/ のルールを参照。
+
+            ## 手順
+
+            1. `git diff origin/${{ github.event.pull_request.base.ref }}...HEAD --stat` で変更概要
+            2. 重要な diff を読み、観点ごとに具体的な指摘を出す
+            3. 軽微な指摘はまとめる（指摘を多発させない）
+            4. commit message が `#<issue>` を含むか / `[skip-issue]` 妥当か確認
+            5. CLAUDE.md の "完了報告前は typecheck / build" が PR 説明で言及されているか確認
+
+            ## 出力フォーマット
+
+            出力全体を1つの Markdown 文書として返す。次の構造で書く：
+
+            ```
+            ## 5軸レビュー (Codex)
+
+            ### Correctness
+            - <観点別の具体的指摘 / 問題なければ "問題なし">
+
+            ### Readability
+            - ...
+
+            ### Architecture
+            - ...
+
+            ### Security
+            - ...
+
+            ### Performance
+            - ...
+
+            ## Learning notes for the human
+
+            ### この PR で出てきた概念（最大3つ）
+            - <概念1>: <1〜2行の説明> — <公式ドキュメントの該当ページ URL>
+            - <概念2>: ...
+
+            ### 1分で試せる小実験
+            - <手を動かして概念を確認できるコマンド or 操作を1つ>
+            ```
+
+            **重要な制約**:
+            - 「言語の文法は分かるが、ライブラリと PJ 固有のパターンは初見」レベルを想定
+            - 公式ドキュメントへのリンクが提供できない概念は出さない（hallucination 抑制）
+            - 概念が見当たらないなら「今回は新規概念なし」と1行書いて終わる。無理に3つ捻り出さない
+
+            ## やってはいけないこと
+
+            - PR を merge / close しない（権限なし）
+            - approve しない（人間レビュアー領域）
+            - verdict marker（`<!-- ai-review-verdict... -->`）は出力に含めない（後段の classifier ジョブが付与する）
+
+      - name: Post review comment
+        if: steps.codex_review.outputs.final-message != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+          MSG: ${{ steps.codex_review.outputs.final-message }}
+        run: |
+          # 先頭に [codex] prefix を付けて claude review と区別する
+          printf '[codex]\n\n%s' "$MSG" | gh pr comment "$PR_NUMBER" --repo "$REPO" --body-file -
+
+  verdict-classifier:
+    needs: review
+    if: needs.review.outputs.final_message != ''
+    runs-on: ubuntu-latest
+    environment: codex
+    permissions:
+      contents: read
+      pull-requests: write
+      id-token: write
+    outputs:
+      verdict: ${{ steps.codex_classify.outputs.final-message }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Classify verdict
+        id: codex_classify
+        uses: openai/codex-action@v1
+        with:
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          allow-bot-users: "dependabot[bot]"
+          prompt: |
+            前段で post された Codex review コメント本文を読んで verdict を判定する。
+            rework-tracker.yml がこの marker を grep して rework count を加算するため、本ステップは review が回った時に必ず動く。
+
+            ## review 本文
+
+            ```
+            ${{ needs.review.outputs.final_message }}
+            ```
+
+            ## 判定基準
+
+            - 修正不要・全軸 ✅ → `approved`
+            - 軽微（cosmetic / 文言 / 命名 等で merge を妨げない） → `changes-requested-minor`
+            - correctness / security / architecture / performance の実質指摘あり → `changes-requested-major`
+
+            ## 出力
+
+            出力は次の3つのいずれか1ワードのみ（説明文・改行・記号一切なし）：
+
+            ```
+            approved
+            ```
+
+            または
+
+            ```
+            changes-requested-minor
+            ```
+
+            または
+
+            ```
+            changes-requested-major
+            ```
+
+            確信が持てない場合は安全側の `changes-requested-major`。
+
+      - name: Post verdict marker
+        if: steps.codex_classify.outputs.final-message != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+          VERDICT: ${{ steps.codex_classify.outputs.final-message }}
+        run: |
+          # 余計な改行や空白を除去して 1 ワードのみ抽出
+          v=$(printf '%s' "$VERDICT" | tr -d '[:space:]`')
+          # 想定 3 値以外なら安全側
+          case "$v" in
+            approved|changes-requested-minor|changes-requested-major) ;;
+            *) v="changes-requested-major" ;;
+          esac
+          gh pr comment "$PR_NUMBER" --repo "$REPO" --body "$(printf '<!-- ai-review-verdict-codex: %s -->\n\n_classified by codex-pr-review classifier step_' "$v")"

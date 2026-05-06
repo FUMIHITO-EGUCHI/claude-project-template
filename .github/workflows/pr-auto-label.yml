@@ -1,0 +1,23 @@
+name: PR auto-label
+
+# 新規 PR に default で `review: claude` ラベルを自動付与する。
+# このラベルが claude-pr-review.yml の起動トリガー。codex review を使いたい場合は
+# 人間が `review: codex` に張替えるか追加で付与する（両方付与で両方走る）。
+
+on:
+  pull_request:
+    types: [opened]
+
+permissions:
+  pull-requests: write
+
+jobs:
+  auto-label:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Add default review label
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: gh pr edit "$PR_NUMBER" --repo "$REPO" --add-label "review: claude"

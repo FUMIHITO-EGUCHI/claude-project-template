@@ -2,7 +2,9 @@ name: Claude PR review
 
 on:
   pull_request:
-    types: [opened, synchronize, ready_for_review]
+    # labeled も含めるのは、PR open 後に `review: claude` ラベルが
+    # pr-auto-label.yml 経由で付与された時点で起動させるため。
+    types: [opened, synchronize, ready_for_review, labeled]
 
 permissions:
   contents: read
@@ -29,7 +31,13 @@ jobs:
 
   review:
     needs: check-secrets
-    if: needs.check-secrets.outputs.has_token == 'true' && github.event.pull_request.draft == false
+    # `review: claude` ラベルが付いてる PR でのみ起動する。
+    # default ラベルは pr-auto-label.yml が PR open 時に自動付与。
+    # 剥がせば claude review は起動しない（codex に切替時の運用）。
+    if: |
+      needs.check-secrets.outputs.has_token == 'true' &&
+      github.event.pull_request.draft == false &&
+      contains(github.event.pull_request.labels.*.name, 'review: claude')
     runs-on: ubuntu-latest
     environment: claude  # CLAUDE_CODE_OAUTH_TOKEN は env: claude に格納
     steps:

@@ -80,6 +80,14 @@
   color: "5319e7"
   description: "完了時の振り返り：strong を使ったが standard で足りた"
 
+# --- review (どの AI に PR review を依頼するか。pr-auto-label.yml が `review: claude` を default 付与) ---
+- name: "review: claude"
+  color: "7c3aed"
+  description: "claude-pr-review.yml を起動するトリガー（PR ラベル）"
+- name: "review: codex"
+  color: "0f766e"
+  description: "codex-pr-review.yml を起動するトリガー（PR ラベル）"
+
 # --- rework (AI review feedback による手戻り回数。rework-tracker.yml が自動付与) ---
 - name: "rework: 1"
   color: "fbca04"
