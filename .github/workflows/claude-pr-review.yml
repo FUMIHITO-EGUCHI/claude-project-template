@@ -4,15 +4,12 @@ on:
   pull_request:
     types: [opened, synchronize, ready_for_review]
 
-permissions:
-  contents: read
-  pull-requests: write
-  id-token: write
-  actions: read  # claude-code-action queries GET /repos/:o/:r/actions/runs to attach job links
+permissions: {}
 
 jobs:
   check-secrets:
     runs-on: ubuntu-latest
+    permissions: {}
     outputs:
       has_token: ${{ steps.check.outputs.has_token }}
     steps:
@@ -29,9 +26,17 @@ jobs:
 
   review:
     needs: check-secrets
-    if: needs.check-secrets.outputs.has_token == 'true' && github.event.pull_request.draft == false
+    if: |
+      needs.check-secrets.outputs.has_token == 'true' &&
+      github.event.pull_request.draft == false &&
+      github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     environment: claude  # CLAUDE_CODE_OAUTH_TOKEN は env: claude に格納
+    permissions:
+      contents: read
+      pull-requests: write
+      id-token: write
+      actions: read  # claude-code-action queries GET /repos/:o/:r/actions/runs to attach job links
     steps:
       - uses: actions/checkout@v4
         with:

@@ -8,18 +8,16 @@ on:
   issues:
     types: [assigned]
 
-permissions:
-  contents: write
-  issues: write
-  pull-requests: write
-  id-token: write
-  actions: read  # claude-code-action queries GET /repos/:o/:r/actions/runs to attach job links
+permissions: {}
 
 jobs:
-  check-secrets:
+  preflight:
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
     outputs:
       has_token: ${{ steps.check.outputs.has_token }}
+      trusted_context: ${{ steps.trust.outputs.trusted_context }}
     steps:
       - id: check
         env:
@@ -32,16 +30,52 @@ jobs:
             echo "::warning::CLAUDE_CODE_OAUTH_TOKEN is not configured for this repository — skipping @claude responder. Set the secret to enable."
           fi
 
+      - id: trust
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          EVENT_NAME: ${{ github.event_name }}
+          REPO: ${{ github.repository }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_IS_PR: ${{ github.event.issue.pull_request != null }}
+          REVIEW_HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+        run: |
+          set -euo pipefail
+
+          trusted=true
+
+          if [ "$EVENT_NAME" = "pull_request_review_comment" ]; then
+            if [ "$REVIEW_HEAD_REPO" != "$REPO" ]; then
+              trusted=false
+            fi
+          elif [ "$EVENT_NAME" = "issue_comment" ] && [ "$ISSUE_IS_PR" = "true" ]; then
+            head_repo="$(gh api "repos/$REPO/pulls/$ISSUE_NUMBER" --jq '.head.repo.full_name')"
+            if [ "$head_repo" != "$REPO" ]; then
+              trusted=false
+            fi
+          fi
+
+          echo "trusted_context=$trusted" >> "$GITHUB_OUTPUT"
+          if [ "$trusted" != "true" ]; then
+            echo "::warning::Skipping @claude responder for external fork PR context."
+          fi
+
   respond:
-    needs: check-secrets
+    needs: preflight
     if: |
-      needs.check-secrets.outputs.has_token == 'true' &&
+      needs.preflight.outputs.has_token == 'true' &&
+      needs.preflight.outputs.trusted_context == 'true' &&
       (
         (github.event.comment != null && contains(github.event.comment.body, '@claude')) ||
         (github.event.action == 'assigned' && github.event.assignee.login == 'claude')
       )
     runs-on: ubuntu-latest
     environment: claude  # CLAUDE_CODE_OAUTH_TOKEN は env: claude に格納
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+      id-token: write
+      actions: read  # claude-code-action queries GET /repos/:o/:r/actions/runs to attach job links
     steps:
       - uses: actions/checkout@v4
 
