@@ -1,0 +1,2 @@
+# Workflow changes can alter repository credentials and CI execution paths.
+.github/ @FUMIHITO-EGUCHI

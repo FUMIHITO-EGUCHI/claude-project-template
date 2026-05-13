@@ -4,15 +4,12 @@ on:
   issues:
     types: [opened]
 
-permissions:
-  contents: read
-  issues: write
-  id-token: write
-  actions: read  # claude-code-action queries GET /repos/:o/:r/actions/runs to attach job links
+permissions: {}
 
 jobs:
   check-secrets:
     runs-on: ubuntu-latest
+    permissions: {}
     outputs:
       has_token: ${{ steps.check.outputs.has_token }}
     steps:
@@ -32,6 +29,11 @@ jobs:
     if: needs.check-secrets.outputs.has_token == 'true'
     runs-on: ubuntu-latest
     environment: claude  # CLAUDE_CODE_OAUTH_TOKEN は env: claude に格納
+    permissions:
+      contents: read
+      issues: write
+      id-token: write
+      actions: read  # claude-code-action queries GET /repos/:o/:r/actions/runs to attach job links
     steps:
       - uses: actions/checkout@v4
 
